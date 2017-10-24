@@ -17,8 +17,8 @@ export default class Devices extends React.Component {
         axios.get('https://reactiot.herokuapp.com/db', {
                 responseType: 'json'
             })
-            .then(function (response) {console.log(response);
-                self.setState({ devices: response });
+            .then(function (response) {
+                self.setState({ devices: response.data });
             })
             .catch(function (error) {
                 console.log(error);

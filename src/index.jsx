@@ -6,6 +6,8 @@ import './sass/main.sass'
 import Devices from 'components/devices.jsx'
 
 ReactDom.render(
-    <Devices />
+    <div id="content">
+        <Devices />
+    </div>
     , document.getElementById('root')
 )
