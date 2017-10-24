@@ -49,7 +49,7 @@ app.listen(app.get('port'), function() {
 
 app.get('/db', function (req, res) {
   pool.query('SELECT * from Device', (err, re) => {
-    res.send(re.row);
+    res.send(re);
   })
 
 });
