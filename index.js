@@ -26,7 +26,7 @@ console.log(process.env.DATABASE_URL);
 
 app.get('/db', function (req, res) {
   client.query('SELECT * from test_table', (err, res) => {
-    console.log(err, res);
+    res.send(res);
     client.end();
   })
 
