@@ -13,11 +13,12 @@ export default class Devices extends React.Component {
     }
 
     fetchData() {
+        var self = this;
         axios.get('https://reactiot.herokuapp.com/db', {
                 responseType: 'json'
             })
             .then(function (response) {
-                this.setState({ devices: response });
+                self.setState({ devices: response });
             })
             .catch(function (error) {
                 console.log(error);
