@@ -1,5 +1,6 @@
 var express = require('express');
-var { Pool, Client } = require('pg')
+var { Pool, Client } = require('pg');
+var httpProxy = require('http-proxy');
 
 var app = express();
 var pool = new Pool({
@@ -11,7 +12,24 @@ var pool = new Pool({
   ssl: true
 }); 
 
-app.set('port', (process.env.PORT || 5000));
+const proxy = httpProxy.createProxyServer();
+const isProduction = process.env.NODE_ENV === 'production';
+const port = 3000;
+
+// create Proxy to 8080 on development
+if (!isProduction) {
+  console.log('Build on development!');
+  app.all('/build/*', function (req, res) {
+    proxy.web(req, res, {
+      target: 'http://localhost:8080'
+    });
+  });
+}
+else {
+  console.log('Build on production!');
+}
+
+app.set('port', (process.env.PORT || port));
 
 app.use(express.static(__dirname + '/public'));
 
@@ -31,7 +49,7 @@ app.listen(app.get('port'), function() {
 
 app.get('/db', function (req, res) {
   pool.query('SELECT * from Device', (err, re) => {
-    res.send(re);
+    res.send(re.row);
   })
 
 });
