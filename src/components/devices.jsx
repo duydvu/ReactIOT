@@ -27,12 +27,12 @@ export default class Devices extends React.Component {
 
     render() {
         const item = this.state.devices.map((e, i) => 
-            <div className="item">
-                <div>e.id</div>
-                <div>e.name</div>
-                <div>e.latitude</div>
-                <div>e.longitude</div>
-                <div>e.status</div>
+            <div className="item" key={i}>
+                <div>{e.id}</div>
+                <div>{e.name}</div>
+                <div>{e.latitude}</div>
+                <div>{e.longitude}</div>
+                <div>{e.status}</div>
             </div>
         );
         return (
