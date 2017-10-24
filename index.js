@@ -1,8 +1,8 @@
 var express = require('express');
-var pg = require('pg');
+var { Pool, Client } = require('pg')
 
 var app = express();
-var client = new pg.Client({
+var pool = new Pool({
   user: "swkcgdxapapojz",
   password: "e2f595b6946c021e1f2ce02cd3852cdce6a5e391aa358e5ebc204dc3aa158e54",
   database: "d34l4ng8fd8g0a",
@@ -20,7 +20,9 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 app.get('/', function(request, response) {
-  response.render('pages/index')
+  response.render('pages/index', {
+    title: 'React Internet of things'
+  })
 });
 
 app.listen(app.get('port'), function() {
@@ -28,10 +30,81 @@ app.listen(app.get('port'), function() {
 });
 
 app.get('/db', function (req, res) {
-  client.connect();
-  client.query('SELECT * from test_table', (err, re) => {
+  pool.query('SELECT * from Device', (err, re) => {
     res.send(re);
-    client.end();
   })
 
 });
+
+app.post('/insert', function(req, res) {
+  const query = 'INSERT INTO Device(ID, name, latitude, longitude, status) VALUES($1, $2, $3, $4, $5)';
+  const body = req.body;
+  const values = [body.id, body.name, body.latitude, body.longitude, body.status];
+
+  // callback
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to insert data!');
+    } else {
+      res.send('Successfully inserted data!');
+    }
+  })
+})
+
+app.post('/delete', function(req, res) {
+  const query1 = 'DELETE FROM PowerConsumption WHERE ID = $1';
+  const query2 = 'DELETE FROM Device WHERE ID = $1';
+  const body = req.body;
+  const values = [body.id];
+
+  // callback
+  pool.query(query1, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to delete data!');
+      return;
+    } else {
+   
+      pool.query(query2, values, (err, _res) => {
+        if (err) {
+          console.log(err.stack);
+          res.send('Failed to delete data!');
+        } else {
+          res.send('Successfully deleted data!');
+        }
+      });
+    
+    }
+  })
+
+})
+
+app.post('/update', function(req, res) {
+  const query1 = 'INSERT INTO PowerConsumption(ID, consumption, time) VALUES($1, $5, $6)';
+  const query2 = 'UPDATE Device SET latitude = $2, longitude = $3, status = $4 WHERE ID = $1';
+  const body = req.body;
+  const values = [body.id, body.latitude, body.longitude, body.status, body.consumption, body.time];
+
+  // callback
+  pool.query(query1, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to update data!');
+      return;
+    } else {
+   
+      pool.query(query2, values, (err, _res) => {
+        if (err) {
+          console.log(err.stack);
+          res.send('Failed to update data!');
+        } else {
+          res.send('Successfully updated data!');
+        }
+      });
+    
+    }
+  })
+
+})
+
