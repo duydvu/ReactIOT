@@ -30,8 +30,8 @@ export default class Devices extends React.Component {
             <div className="item" key={i}>
                 <div><span>ID thiết bị :</span>{e.id}</div>
                 <div><span>Tên :</span>{e.name}</div>
-                <div><span>Vĩ độ :</span>{e.latitude}</div>
-                <div><span>Kinh độ :</span>{e.longitude}</div>
+                <div><span>Vĩ độ :</span>{e.latitude ? e.latitude : 'null'}</div>
+                <div><span>Kinh độ :</span>{e.longitude ? e.longitude : 'null'}</div>
                 <div><span>Trạng thái :</span>{e.status}</div>
             </div>
         );

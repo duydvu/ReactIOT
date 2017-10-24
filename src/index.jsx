@@ -1,9 +1,11 @@
 import React from 'react'
 import ReactDom from 'react-dom'
 
+import Devices from 'components/devices.jsx'
+
 import './sass/main.sass'
 
-import Devices from 'components/devices.jsx'
+import 'images/apps.png'
 
 ReactDom.render(
     <div id="content">
