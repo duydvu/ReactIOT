@@ -17,7 +17,7 @@ export default class Devices extends React.Component {
                 responseType: 'json'
             })
             .then(function (response) {
-                this.setState({ devices: data });
+                this.setState({ devices: response });
             })
             .catch(function (error) {
                 console.log(error);
