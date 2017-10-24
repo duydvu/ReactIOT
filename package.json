@@ -9,7 +9,7 @@
   "scripts": {
     "test": "node test.js",
     "start": "nodemon ./index.js & webpack-dev-server --port 8080",
-    "build": "webpack & NODE_ENV=production node ./index.js"
+    "build": "webpack"
   },
   "dependencies": {
     "axios": "^0.16.2",
