@@ -1,39 +1,29 @@
-# node-js-getting-started
+# React Internet of Things
 
-A barebones Node.js app using [Express 4](http://expressjs.com/).
+An Internet of Things application using React.js and React Native.<br />
+Based on Heroku's node-js-getting-started.git with some modifications (add Webpack, SASS language, etc.).
 
-This application supports the [Getting Started with Node on Heroku](https://devcenter.heroku.com/articles/getting-started-with-nodejs) article - check it out.
+## Installation
 
-## Running Locally
+If you have installed [Node.js](https://nodejs.org/en/) and [Git](https://git-scm.com/downloads), run the following command:
+```
+$ git clone https://github.com/duyisking/ReactIOT
+$ cd ReactIOT
+$ npm i
+```
 
-Make sure you have [Node.js](http://nodejs.org/) and the [Heroku CLI](https://cli.heroku.com/) installed.
+## Run on development
 
-```sh
-$ git clone git@github.com:heroku/node-js-getting-started.git # or clone your own fork
-$ cd node-js-getting-started
-$ npm install
+Use the command:
+```
 $ npm start
 ```
+This will run localhost on port 3000, you can start coding with the auto-reload feature. This means that every change you made on the files within ./src will reload the server (Node.js) or the client (Webpack), you don't have to press F5 on the browser or restart the server :).
 
-Your app should now be running on [localhost:5000](http://localhost:5000/).
+## Run on production
 
-## Deploying to Heroku
-
+Use the command:
 ```
-$ heroku create
-$ git push heroku master
-$ heroku open
+$ npm run build
 ```
-or
-
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-
-## Documentation
-
-For more information about using Node.js on Heroku, see these Dev Center articles:
-
-- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
-- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
-- [Node.js on Heroku](https://devcenter.heroku.com/categories/nodejs)
-- [Best Practices for Node.js Development](https://devcenter.heroku.com/articles/node-best-practices)
-- [Using WebSockets on Heroku with Node.js](https://devcenter.heroku.com/articles/node-websockets)
+This will build and generate bundle.js and other resources which you have used on development. They are built and placed at ./public/build, then push these files to the server (if you have one :V).
