@@ -70,6 +70,7 @@ app.get('/db', function (req, res) {
 app.post('/insert', function(req, res) {
   const query = 'INSERT INTO Device(ID, name, latitude, longitude, status) VALUES($1, $2, $3, $4, $5)';
   const body = req.body;
+  console.log(body);
   const values = [body.id, body.name, body.latitude, body.longitude, body.status];
 
   // callback
