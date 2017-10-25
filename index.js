@@ -67,11 +67,12 @@ app.get('/db', function (req, res) {
 
 });
 
-app.get('/insert/:id-:name-:location-:status-:consumption-:time', function(req, res) {
+app.get('/insert/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function(req, res) {
   const query1 = 'INSERT INTO device(id, name, location, status) VALUES($1, $2, $3, $4)';
   const query2 = 'INSERT INTO power(id, consumption, time) VALUES($1, $5, $6)';
   const body = req.params;
-  const values = [body.id, body.name, body.location, body.status, body.consumption, body.time];
+  const time = `${body.year}-${body.month}-${body.day} ${body.hour}:${body.minute}:${body.second}`;
+  const values = [body.id, body.name, body.location, body.status, body.consumption, time];
 
   // callback
   pool.query(query1, values, (err, _res) => {
@@ -121,11 +122,12 @@ app.get('/delete/:id', function (req, res) {
   })
 })
 
-app.get('/update/:id-:name-:location-:status-:consumption-:time', function (req, res) {
+app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function (req, res) {
   const query1 = 'UPDATE device SET name = $2, location = $3, status = $4 WHERE id = $1';
   const query2 = 'INSERT INTO power(id, consumption, time) VALUES($1, $5, $6)';
   const body = req.params;
-  const values = [body.id, body.name, body.location, body.status, body.consumption, body.time];
+  const time = `${body.year}-${body.month}-${body.day} ${body.hour}:${body.minute}:${body.second}`;
+  const values = [body.id, body.name, body.location, body.status, body.consumption, time];
 
   // callback
   pool.query(query1, values, (err, _res) => {
