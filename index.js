@@ -33,6 +33,11 @@ app.set('port', (process.env.PORT || port));
 
 app.use(express.static(__dirname + '/public'));
 
+app.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
+
 // views is directory for all template files
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
