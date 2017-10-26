@@ -27,13 +27,7 @@ export default class Devices extends React.Component {
 
     render() {
         const item = this.state.devices.map((e, i) => 
-            <div className="item" key={i}>
-                <div><span>ID thiết bị :</span>{e.id}</div>
-                <div><span>Tên :</span>{e.name}</div>
-                <div><span>Vĩ độ :</span>{e.latitude ? e.latitude : 'null'}</div>
-                <div><span>Kinh độ :</span>{e.longitude ? e.longitude : 'null'}</div>
-                <div><span>Trạng thái :</span>{e.status}</div>
-            </div>
+            <Device_item key={i} _id={e.id} name={e.name} location={e.location} status={e.status} />
         );
         return (
             <div className="devices">
@@ -42,3 +36,50 @@ export default class Devices extends React.Component {
         )
     }
 }
+
+class Device_item extends React.Component {
+    constructor(props) {
+        super(props);
+        var colorList = ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#009688', '#4CAF50', '#FF5722', '#607D8B'];
+        this.color = colorList[Math.floor(Math.random() * 10)];
+    }
+
+    render() {
+        return (
+            <div className="item" style={{background: this.color}}>
+                <div className="info">
+                    <div className="row"><span>ID thiết bị : </span>{this.props._id}</div>
+                    <div className="row"><span>Tên : </span>{this.props.name}</div>
+                    <div className="row"><span>Vị trí : </span>{this.props.location}</div>
+                    <div className="row">
+                        <span>Trạng thái : </span>
+                        <Toggle color={this.color} on={this.props.status=='dang chay'} />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+
+class Toggle extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { on : this.props.on };
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick() {
+        this.setState(prev => ({ on : !prev.on }));
+    }
+
+    render() {
+        return (
+            <div className="toggle">
+                <div className="toggle-bk" onClick={this.handleClick}>
+                    <div className={`toggle-button ${this.state.on?'':'off'}`} style={{background: this.props.color}}></div>
+                </div>
+                <span>{this.state.on ? 'Bật' : 'Tắt'}</span>
+            </div>
+        );
+    }
+} 

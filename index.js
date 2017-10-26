@@ -33,11 +33,8 @@ else {
 app.set('port', (process.env.PORT || port));
 
 app.use(express.static(__dirname + '/public'));
-
 app.use(bodyParser.urlencoded({ extended: false }))
-
 app.use(bodyParser.json())
-
 app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
