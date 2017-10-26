@@ -42,6 +42,22 @@ class Device_item extends React.Component {
         super(props);
         var colorList = ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#009688', '#4CAF50', '#FF5722', '#607D8B'];
         this.color = colorList[Math.floor(Math.random() * 10)];
+        this.updateData = this.updateData.bind(this);
+    }
+
+    updateData(status) {
+        var self = this;
+        axios.post('https://reactiot.herokuapp.com/switch', {
+                data: {
+                    status: JSON.stringify(status)
+                }
+            })
+            .then(function (response) {
+                console.log(response);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     render() {
@@ -53,7 +69,7 @@ class Device_item extends React.Component {
                     <div className="row"><span>Vị trí : </span>{this.props.location}</div>
                     <div className="row">
                         <span>Trạng thái : </span>
-                        <Toggle color={this.color} on={this.props.status=='dang chay'} />
+                        <Toggle color={this.color} on={this.props.status} switch={this.updateData} />
                     </div>
                 </div>
             </div>
@@ -70,6 +86,7 @@ class Toggle extends React.Component {
 
     handleClick() {
         this.setState(prev => ({ on : !prev.on }));
+        this.props.switch(this.state.on);
     }
 
     render() {

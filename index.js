@@ -1,7 +1,9 @@
 var express = require('express');
 var { Pool, Client } = require('pg');
 var httpProxy = require('http-proxy');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+var bcrypt = require('bcrypt');
+var passport = require('passport');
 
 var app = express();
 var pool = new Pool({
@@ -147,4 +149,21 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
 
     }
   })
+})
+
+app.post('/switch', function(req, res) {
+  const query = 'UPDATE device SET status = $2 WHERE id = $1';
+  const body = req.params;
+  const values = [body.id, body.status];
+
+  // callback
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to update data!');
+    } else {
+      res.send('Successfully updated data!');
+    }
+  });
+  
 })
