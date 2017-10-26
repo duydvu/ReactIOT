@@ -49,6 +49,7 @@ class Device_item extends React.Component {
         var self = this;
         axios.post('https://reactiot.herokuapp.com/switch', {
                 data: {
+                    id: self.props.id,
                     status: JSON.stringify(status)
                 }
             })
