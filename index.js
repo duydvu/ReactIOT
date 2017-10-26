@@ -153,7 +153,7 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
 
 app.post('/switch', function(req, res) {
   const query = 'UPDATE device SET status = $2 WHERE id = $1';
-  const body = req.body;console.log(body);
+  const body = req.body.data;console.log(body);
   const values = [body.id, body.status];
 
   // callback
