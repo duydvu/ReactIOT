@@ -60,7 +60,9 @@ app.listen(app.get('port'), function() {
 });
 
 app.get('/db', function (req, res) {
-  pool.query('SELECT id, name, location, status, array_agg(consumption), array_agg(time) FROM device INNER JOIN power ON id = device_id GROUP BY id ORDER BY id', (err, _res) => {
+  
+  pool.query('SELECT id, name, location, status, array_agg(consumption) AS consumption, array_agg(time) AS time FROM device INNER JOIN power ON id = device_id GROUP BY id ORDER BY id', 
+  (err, _res) => {
 
     if (err) {
       console.log(err.stack);
