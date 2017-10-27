@@ -61,7 +61,7 @@ app.listen(app.get('port'), function() {
 
 app.get('/db', function (req, res) {
   
-  pool.query('SELECT id, name, location, status, array_agg(consumption) AS consumption, array_agg(time) AS time FROM device INNER JOIN power ON id = device_id GROUP BY id ORDER BY id', 
+  pool.query("SELECT id, name, location, status, array_agg(consumption) AS consumption, array_agg(time) AS time FROM device INNER JOIN power ON id = device_id WHERE time >= now() - interval '1 day' GROUP BY id ORDER BY id", 
   (err, _res) => {
 
     if (err) {

@@ -34,19 +34,20 @@ a
     display: flex
     flex-wrap: wrap
     .item
-        margin: 10px
-        border-radius: 10px
-        padding: 20px
-        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2)
-        transition: 0.3s ease-in-out
-        &:hover
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2)        
+        padding: 10px
+        width: 100/3*1%
+        box-sizing: border-box
         .info
-            width: 250px
+            padding: 20px
+            border-radius: 10px
             display: flex
             justify-content: space-around
             align-items: flex-start
             flex-direction: column
+            transition: 0.3s ease-in-out
+            box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2)
+            &:hover
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2)        
             .row, .row > span
                 color: #fff
                 line-height: 40px
@@ -84,4 +85,15 @@ a
             &.off
                 left: calc(100% - 30px)
 
-            
+.chart
+    width: 100%
+
+@media screen and (max-width: 960px)
+    .devices
+        .item
+            width: 50%
+
+@media screen and (max-width: 640px)
+    .devices
+        .item
+            width: 100%
