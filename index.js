@@ -4,8 +4,11 @@ var httpProxy = require('http-proxy');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
 var passport = require('passport');
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
 
 var app = express();
+
 var pool = new Pool({
   user: "swkcgdxapapojz",
   password: "e2f595b6946c021e1f2ce02cd3852cdce6a5e391aa358e5ebc204dc3aa158e54",
@@ -40,7 +43,7 @@ app.use(bodyParser.json())
 app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+  res.setHeader("Access-Control-Allow-Methods", "GET");
   res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
   next();
 });
@@ -60,8 +63,9 @@ app.listen(app.get('port'), function() {
 });
 
 app.get('/db', function (req, res) {
-  
-  pool.query("SELECT id, name, location, status, array_agg(consumption) AS consumption, array_agg(time) AS time FROM device INNER JOIN power ON id = device_id WHERE time >= now() - interval '1 day' GROUP BY id ORDER BY id", 
+  const query1 = "SELECT id, name, location, status, final.consumption, final.time FROM device INNER JOIN (select power.device_id, array_agg(power.consumption) as consumption, array_agg(power.time) as time from power inner join (select device_id, array_agg(time order by time desc) as time from power group by device_id) as grouped on grouped.device_id = power.device_id and array_position(grouped.time, power.time) between 1 and 3 group by power.device_id) as final ON device.id = final.device_id ORDER BY id";
+  const query2 = "SELECT * from device";
+  pool.query(query2, 
   (err, _res) => {
 
     if (err) {
@@ -161,19 +165,52 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
   })
 })
 
-app.post('/switch', function(req, res) {
-  const query = 'UPDATE device SET status = $2 WHERE id = $1';
-  const body = req.body.data;console.log(body);
-  const values = [body.id, body.status];
 
-  // callback
-  pool.query(query, values, (err, _res) => {
-    if (err) {
-      console.log(err.stack);
-      res.send('Failed to update data!');
-    } else {
-      res.send('Successfully updated data!');
-    }
+io.on('connection', function (socket) {
+  socket.emit('connect', { message: 'connected!' });
+  socket.on('insertDevice', function (body) {
+      const query = 'INSERT INTO device(id, name, location, status) VALUES($1, $2, $3, $4)';
+      const values = [body.id, body.name, body.location, body.status];
+
+      // callback
+      pool.query(query, values, (err, _res) => {
+        if (err) {
+          console.log(err.stack);
+        } else {
+              console.log('Successfully insert device!');
+        }
+      });
+
   });
-  
-})
+
+  socket.on('insertPower', function (body) {
+    const query = 'INSERT INTO power(id, consumption, time) VALUES($1, $2, $3)';
+    const time = `${body.year}-${body.month}-${body.day} ${body.hour}:${body.minute}:${body.second}`;
+    const values = [body.id, body.consumption, time];
+
+    // callback
+    pool.query(query, values, (err, _res) => {
+      if (err) {
+        console.log(err.stack);
+      } else {
+        console.log('Successfully insert power!');
+      }
+    });
+
+  });
+
+  socket.on('update', function (body) {
+
+    socket.broadcast.emit('connect', { body: body });
+
+  });
+
+  socket.on('switch', function (body) {
+
+    console.log(body);
+    socket.broadcast.emit('switch', { body: body });
+
+  });
+
+
+});

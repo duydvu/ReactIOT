@@ -1,6 +1,8 @@
 import React from 'react'
 import axios from 'axios'
 import Chart from 'chart.js'
+import openSocket from 'socket.io-client';
+const socket = openSocket('https://reactiot.herokuapp.com/');
 
 export default class Devices extends React.Component {
     constructor(props) {
@@ -28,7 +30,7 @@ export default class Devices extends React.Component {
 
     render() {
         const item = this.state.devices.map((e, i) => 
-            <Device_item key={i} _id={e.id} name={e.name} location={e.location} status={e.status} consumption={e.consumption} time={e.time} />
+            <Device_item key={i} _id={e.id} name={e.name} location={e.location} status={e.status} />
         );
         return (
             <div className="devices">
@@ -47,61 +49,55 @@ class Device_item extends React.Component {
     }
 
     updateData(status) {
-        var self = this;
-        axios.post('https://reactiot.herokuapp.com/switch', {
-                data: {
-                    id: self.props._id,
-                    status: JSON.stringify(status)
-                }
-            })
-            .then(function (response) {
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        
+        socket.emit('switch', {
+            id: self.props._id,
+            status: JSON.stringify(status)
+        });
+                
     }
 
     componentDidMount() {
-        var self = this;
-        var ctx = this.canvas.getContext('2d');
-        var data = this.props.consumption.map((e, i) => {
-            return {
-                x: new Date(self.props.time[i]).getMinutes(),
-                y: e
-            }
-        });
-        var myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                datasets: [{
-                    data: data,
-                    fill: false,
-                    borderColor: '#fff',
-                    cubicInterpolationMode: 'monotone'
-                }]
-            },
-            options: {
-                scales: {
-                    xAxes: [{
-                        type: 'linear',
-                        position: 'bottom',
-                        ticks: {
-                            fontColor: '#fff',
-                        },
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            fontColor: '#fff',
-                            beginAtZero: true,
-                            suggestedMax: 300
-                        },
-                    }]
-                },
-                legend: {
-                    display: false
-                },
-            }
-        });
+        // var self = this;
+        // var ctx = this.canvas.getContext('2d');
+        // var data = this.props.consumption.map((e, i) => {
+        //     return {
+        //         x: new Date(self.props.time[i]).getMinutes(),
+        //         y: e
+        //     }
+        // });
+        // var myChart = new Chart(ctx, {
+        //     type: 'line',
+        //     data: {
+        //         datasets: [{
+        //             data: data,
+        //             fill: false,
+        //             borderColor: '#fff',
+        //             cubicInterpolationMode: 'monotone'
+        //         }]
+        //     },
+        //     options: {
+        //         scales: {
+        //             xAxes: [{
+        //                 type: 'linear',
+        //                 position: 'bottom',
+        //                 ticks: {
+        //                     fontColor: '#fff',
+        //                 },
+        //             }],
+        //             yAxes: [{
+        //                 ticks: {
+        //                     fontColor: '#fff',
+        //                     beginAtZero: true,
+        //                     suggestedMax: 300
+        //                 },
+        //             }]
+        //         },
+        //         legend: {
+        //             display: false
+        //         },
+        //     }
+        // });
     }
 
     render() {

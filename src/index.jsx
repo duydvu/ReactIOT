@@ -1,6 +1,5 @@
 import React from 'react'
 import ReactDom from 'react-dom'
-import axios from 'axios'
 
 import Devices from 'components/devices.jsx'
 import Nav from 'components/nav.jsx'
