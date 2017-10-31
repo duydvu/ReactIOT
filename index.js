@@ -51,11 +51,11 @@ app.use(function (req, res, next) {
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-app.listen(port, function() {
-  console.log('Node app is running on port', app.get('port'));
-});
-
-const io = require('socket.io')(app);
+const io = require('socket.io')(
+  app.listen(port, function() {
+    console.log('Node app is running on port', app.get('port'));
+  })
+);
 
 
 app.get('/', function (request, response) {
