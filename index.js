@@ -51,17 +51,11 @@ app.use(function (req, res, next) {
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-// app.listen(app.get('port'), function() {
-//   console.log('Node app is running on port', app.get('port'));
-// });
+app.listen(port, function() {
+  console.log('Node app is running on port', app.get('port'));
+});
 
-const server = express()
-  .use((req, res) => res.render('pages/index', {
-    title: 'React Internet of things'
-  }))
-    .listen(port, () => console.log(`Listening on ${port}`));
-
-const io = require('socket.io')(server);
+const io = require('socket.io')(app);
 
 
 app.get('/', function (request, response) {
