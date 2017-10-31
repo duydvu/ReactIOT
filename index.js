@@ -1,4 +1,6 @@
+var fs = require('fs');
 var express = require('express');
+var https = require('https');
 var { Pool, Client } = require('pg');
 var httpProxy = require('http-proxy');
 var bodyParser = require('body-parser');
@@ -6,8 +8,14 @@ var bcrypt = require('bcrypt');
 var passport = require('passport');
 
 var app = express();
-var httpServer = require('http').createServer(app);
-var io = require('socket.io')(httpServer);
+
+
+var privateKey = fs.readFileSync('server.key', 'utf8');
+var certificate = fs.readFileSync('server.crt', 'utf8');
+var credentials = { key: privateKey, cert: certificate };
+
+var httpsServer = https.createServer(credentials, app);
+var io = require('socket.io')(httpsServer);
 
 var pool = new Pool({
   user: "swkcgdxapapojz",
@@ -56,7 +64,7 @@ app.set('view engine', 'ejs');
 //   console.log('Node app is running on port', app.get('port'));
 // });
 
-httpServer.listen(80);
+httpsServer.listen(443);
 
 app.get('/', function (request, response) {
   response.render('pages/index', {
