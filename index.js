@@ -56,7 +56,7 @@ app.set('view engine', 'ejs');
 //   console.log('Node app is running on port', app.get('port'));
 // });
 
-httpServer.listen(8080);
+httpServer.listen(80);
 
 app.get('/', function (request, response) {
   response.render('pages/index', {
