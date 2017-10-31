@@ -9,14 +9,6 @@ var passport = require('passport');
 
 var app = express();
 
-
-var privateKey = fs.readFileSync('server.key', 'utf8');
-var certificate = fs.readFileSync('server.crt', 'utf8');
-var credentials = { key: privateKey, cert: certificate };
-
-var httpsServer = https.createServer(credentials, app);
-var io = require('socket.io')(httpsServer);
-
 var pool = new Pool({
   user: "swkcgdxapapojz",
   password: "e2f595b6946c021e1f2ce02cd3852cdce6a5e391aa358e5ebc204dc3aa158e54",
@@ -28,7 +20,7 @@ var pool = new Pool({
 
 const proxy = httpProxy.createProxyServer();
 const isProduction = process.env.NODE_ENV === 'production';
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // create Proxy to 8080 on development
 if (!isProduction) {
@@ -43,7 +35,6 @@ else {
   console.log('Build on production!');
 }
 
-app.set('port', (process.env.PORT || port));
 
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -64,7 +55,12 @@ app.set('view engine', 'ejs');
 //   console.log('Node app is running on port', app.get('port'));
 // });
 
-httpsServer.listen(8443);
+const server = express()
+    .use((req, res) => res.send('Okay!'))
+    .listen(port, () => console.log(`Listening on ${port}`));
+
+const io = require('socket.io')(server);
+
 
 app.get('/', function (request, response) {
   response.render('pages/index', {
