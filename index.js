@@ -56,7 +56,9 @@ app.set('view engine', 'ejs');
 // });
 
 const server = express()
-    .use((req, res) => res.send('Okay!'))
+  .use((req, res) => res.render('pages/index', {
+    title: 'React Internet of things'
+  }))
     .listen(port, () => console.log(`Listening on ${port}`));
 
 const io = require('socket.io')(server);
