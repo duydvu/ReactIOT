@@ -49,7 +49,7 @@ class Device_item extends React.Component {
     }
 
     updateData(status) {
-        
+        var self = this;
         socket.emit('switch', {
             id: self.props._id,
             status: JSON.stringify(status)

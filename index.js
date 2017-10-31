@@ -4,10 +4,10 @@ var httpProxy = require('http-proxy');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
 var passport = require('passport');
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
 
 var app = express();
+var httpServer = require('http').createServer(app);
+var io = require('socket.io')(httpServer);
 
 var pool = new Pool({
   user: "swkcgdxapapojz",
@@ -52,14 +52,16 @@ app.use(function (req, res, next) {
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-app.get('/', function(request, response) {
+// app.listen(app.get('port'), function() {
+//   console.log('Node app is running on port', app.get('port'));
+// });
+
+httpServer.listen(8080);
+
+app.get('/', function (request, response) {
   response.render('pages/index', {
     title: 'React Internet of things'
   })
-});
-
-app.listen(app.get('port'), function() {
-  console.log('Node app is running on port', app.get('port'));
 });
 
 app.get('/db', function (req, res) {
