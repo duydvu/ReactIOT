@@ -1,4 +1,3 @@
-var fs = require('fs');
 var express = require('express');
 var https = require('https');
 var { Pool, Client } = require('pg');
@@ -20,8 +19,7 @@ var pool = new Pool({
 
 const proxy = httpProxy.createProxyServer();
 const isProduction = process.env.NODE_ENV === 'production';
-// const port = process.env.PORT || 3000;
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // create Proxy to 8080 on development
 if (!isProduction) {
