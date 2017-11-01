@@ -52,7 +52,7 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 const io = require('socket.io')(
-  app.listen(port, function() {
+  app.listen(3484, function() {
     console.log('Node app is running on port', port);
   })
 );
