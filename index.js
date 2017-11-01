@@ -203,6 +203,7 @@ io.on('connection', function (socket) {
 
   socket.on('update', function (body) {
 
+    console.log(body);
     socket.broadcast.emit('connect', { body: body });
 
   });
