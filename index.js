@@ -20,7 +20,8 @@ var pool = new Pool({
 
 const proxy = httpProxy.createProxyServer();
 const isProduction = process.env.NODE_ENV === 'production';
-const port = process.env.PORT || 3000;
+// const port = process.env.PORT || 3000;
+const port = 3000;
 
 // create Proxy to 8080 on development
 if (!isProduction) {
@@ -52,7 +53,7 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 const io = require('socket.io')(
-  app.listen(3484, function() {
+  app.listen(port, function() {
     console.log('Node app is running on port', port);
   })
 );
