@@ -1,4 +1,5 @@
 var express = require('express');
+var socketio = require('socket.io');
 var https = require('https');
 var { Pool, Client } = require('pg');
 var httpProxy = require('http-proxy');
@@ -50,11 +51,11 @@ app.use(function (req, res, next) {
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-const io = require('socket.io')(
-  app.listen(port, function() {
-    console.log('Node app is running on port', port);
-  })
-);
+const io = socketio(app);
+
+app.listen(port, function() {
+  console.log('Node app is running on port', port);
+})
 
 
 app.get('/', function (request, response) {
@@ -168,6 +169,7 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
 
 
 io.on('connection', function (socket) {
+  console.log('Someone has connected!');
   socket.emit('connect', { message: 'connected!' });
   socket.on('insertDevice', function (body) {
       const query = 'INSERT INTO device(id, name, location, status) VALUES($1, $2, $3, $4)';
