@@ -1,11 +1,18 @@
 var express = require('express');
-var socketio = require('socket.io');
 var https = require('https');
 var { Pool, Client } = require('pg');
 var httpProxy = require('http-proxy');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
 var passport = require('passport');
+var mqtt = require('mqtt');
+
+var client = mqtt.connect({
+  host: 'm14.cloudmqtt.com',
+  port: 11486,
+  username: 'ohkpjxcf',
+  password: '_3KWZeUTV7qe'
+})
 
 var app = express();
 
@@ -51,11 +58,9 @@ app.use(function (req, res, next) {
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-const io = socketio(
-  app.listen(port, function () {
-    console.log('Node app is running on port', port);
-  })
-);
+app.listen(port, function () {
+  console.log('Node app is running on port', port);
+})
 
 app.get('/', function (request, response) {
   response.render('pages/index', {
@@ -166,54 +171,12 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
   })
 })
 
+client.on('connect', function () {
+  console.log('Successfully Connected!');
+  client.subscribe('demo/chrome_test');
+  client.publish('demo/esp8266', 'off');
+})
 
-io.on('connection', function (socket) {
-  console.log('Someone has connected!');
-  socket.emit('connect', { message: 'connected!' });
-  socket.on('insertDevice', function (body) {
-      const query = 'INSERT INTO device(id, name, location, status) VALUES($1, $2, $3, $4)';
-      const values = [body.id, body.name, body.location, body.status];
-
-      // callback
-      pool.query(query, values, (err, _res) => {
-        if (err) {
-          console.log(err.stack);
-        } else {
-              console.log('Successfully insert device!');
-        }
-      });
-
-  });
-
-  socket.on('insertPower', function (body) {
-    const query = 'INSERT INTO power(id, consumption, time) VALUES($1, $2, $3)';
-    const time = `${body.year}-${body.month}-${body.day} ${body.hour}:${body.minute}:${body.second}`;
-    const values = [body.id, body.consumption, time];
-
-    // callback
-    pool.query(query, values, (err, _res) => {
-      if (err) {
-        console.log(err.stack);
-      } else {
-        console.log('Successfully insert power!');
-      }
-    });
-
-  });
-
-  socket.on('update', function (body) {
-
-    console.log(body);
-    socket.broadcast.emit('connect', { body: body });
-
-  });
-
-  socket.on('switch', function (body) {
-
-    console.log(body);
-    socket.broadcast.emit('switch', { body: body });
-
-  });
-
-
-});
+client.on('message', function (topic, message) {
+  console.log(message.toString())
+}) 
