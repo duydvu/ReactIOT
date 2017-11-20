@@ -1,4 +1,5 @@
 var express = require('express');
+var socketio = require('socket.io');
 var https = require('https');
 var { Pool, Client } = require('pg');
 var httpProxy = require('http-proxy');
@@ -58,9 +59,11 @@ app.use(function (req, res, next) {
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-app.listen(port, function () {
-  console.log('Node app is running on port', port);
-})
+const io = socketio(
+  app.listen(port, function () {
+    console.log('Node app is running on port', port);
+  })
+);
 
 app.get('/', function (request, response) {
   response.render('pages/index', {
@@ -170,6 +173,14 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
     }
   })
 })
+
+io.on('connection', function (socket) {
+  console.log('Someone has connected!');
+  socket.on('demo/switch', function (body) {
+    console.log(body);
+    client.publish('demo/switch', body);
+  });
+});
 
 client.on('connect', function () {
   console.log('Successfully Connected!');

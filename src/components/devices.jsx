@@ -9,6 +9,7 @@ export default class Devices extends React.Component {
         super(props);
         this.state = { devices: [] };
         this.fetchData = this.fetchData.bind(this);
+        this.updateData = this.updateData.bind(this);
     }
 
     componentWillMount() {
@@ -28,9 +29,13 @@ export default class Devices extends React.Component {
             });
     }
 
+    updateData(message, data) {
+        socket.emit(message, data);
+    }
+
     render() {
         const item = this.state.devices.map((e, i) => 
-            <Device_item key={i} _id={e.id} name={e.name} location={e.location} status={e.status} />
+            <Device_item key={i} _id={e.id} name={e.name} location={e.location} status={e.status} updateData={this.updateData}/>
         );
         return (
             <div className="devices">
@@ -45,12 +50,12 @@ class Device_item extends React.Component {
         super(props);
         var colorList = ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#009688', '#4CAF50', '#FF5722', '#607D8B'];
         this.color = colorList[Math.floor(Math.random() * 10)];
-        this.updateData = this.updateData.bind(this);
+        this.switch = this.switch.bind(this);
     }
 
-    updateData(status) {
+    switch(status) {
         var self = this;
-        socket.emit('switch', {
+        this.props.updateData('demo/switch', {
             id: self.props._id,
             status: JSON.stringify(status)
         });
@@ -109,7 +114,7 @@ class Device_item extends React.Component {
                     <div className="row"><span>Vị trí : </span>{this.props.location}</div>
                     <div className="row">
                         <span>Trạng thái : </span>
-                        <Toggle color={this.color} on={this.props.status} switch={this.updateData} />
+                        <Toggle color={this.color} on={this.props.status} switch={this.switch} />
                     </div>
                     <div className="row" style={{textAlign: 'center'}}>Tiêu thụ diện</div>
                     <div className="row">
