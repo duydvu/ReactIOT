@@ -176,7 +176,7 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
 
 io.on('connection', function (socket) {
   console.log('Someone has connected!');
-  socket.on('demo/switch', function (body) {
+  socket.on('switch', function (body) {
     console.log(body);
     client.publish('demo/switch', body);
   });
