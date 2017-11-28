@@ -94,6 +94,8 @@ app.post('/login', function(req, res) {
   const body = req.params;
   const values = [body.account, body.password];
 
+  console.log(body.account, body.password);
+
   pool.query(query, values, (err, _res) => {
     if (err) {
       console.log(err.stack);
