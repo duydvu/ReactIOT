@@ -71,7 +71,7 @@ app.get('/', function (request, response) {
   })
 });
 
-app.get('/db', function (req, res) {
+app.get('/db/:id', function (req, res) {
   const query = "select device.id, name, status, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id;";
   const body = req.params;
   const values = [body.id];
