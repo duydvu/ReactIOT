@@ -75,7 +75,7 @@ app.get('/db/:id', function (req, res) {
   const query = "select device.id, name, status, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id;";
   const body = req.params;
   const values = [body.id];
-  console.log(body.id, body);
+
   pool.query(query, values, (err, _res) => {
 
     if (err) {
@@ -83,7 +83,6 @@ app.get('/db/:id', function (req, res) {
       res.send('Failed to fetch data!');
       return;
     } else {
-      console.log(_res.rows);
       res.send(_res.rows);
     }
     
@@ -109,9 +108,9 @@ app.post('/login', function(req, res) {
 });
 
 app.post('/signup', function(req, res) {
-  const query = "insert into users(id, name, account, password) values($1, $2, $3, md5($4))";
+  const query = "insert into users(name, account, password) values($1, $2, md5($3))";
   const body = req.body;
-  const values = [body.id, body.name, body.account, body.password];
+  const values = [body.name, body.account, body.password];
 
   pool.query(query, values, (err, _res) => {
     if (err) {
