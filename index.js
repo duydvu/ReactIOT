@@ -123,6 +123,22 @@ app.post('/signup', function(req, res) {
 
 });
 
+app.post('/addroom', function (req, res) {
+  const query = "insert into rooms(user_id, name) values($1, $2)";
+  const body = req.body;
+  const values = [body.user_id, body.name];
+
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to insert room!');
+    } else {
+      res.send('Successfully inserted room!');
+    }
+  });
+
+});
+
 app.get('/insert/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function(req, res) {
   const query1 = 'INSERT INTO device(id, name, location, status) VALUES($1, $2, $3, $4)';
   const query2 = 'INSERT INTO power(id, consumption, time) VALUES($1, $2, $3)';
