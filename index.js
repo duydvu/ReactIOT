@@ -72,10 +72,10 @@ app.get('/', function (request, response) {
 });
 
 app.get('/db', function (req, res) {
-  const query1 = "SELECT id, name, location, status, final.consumption, final.time FROM device INNER JOIN (select power.device_id, array_agg(power.consumption) as consumption, array_agg(power.time) as time from power inner join (select device_id, array_agg(time order by time desc) as time from power group by device_id) as grouped on grouped.device_id = power.device_id and array_position(grouped.time, power.time) between 1 and 3 group by power.device_id) as final ON device.id = final.device_id ORDER BY id";
-  const query2 = "SELECT * from device";
-  pool.query(query2, 
-  (err, _res) => {
+  const query = "select device.id, name, status, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id;";
+  const body = req.params;
+  const values = [body.id];
+  pool.query(query, values, (err, _res) => {
 
     if (err) {
       console.log(err.stack);
