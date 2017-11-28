@@ -91,10 +91,8 @@ app.get('/db', function (req, res) {
 
 app.post('/login', function(req, res) {
   const query = "select * from users where account = $1 and password = $2";
-  const body = req.params;
+  const body = req.body;
   const values = [body.account, body.password];
-
-  console.log(body.account, body.password);
 
   pool.query(query, values, (err, _res) => {
     if (err) {
