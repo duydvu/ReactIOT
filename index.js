@@ -89,6 +89,23 @@ app.get('/db', function (req, res) {
 
 });
 
+app.post('/login', function(req, res) {
+  const query = "select * from users where account = $1 and password = $2";
+  const body = req.params;
+  const values = [body.account, body.password];
+
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to fetch data!');
+      return;
+    } else {
+      res.send(_res.rows);
+    }
+  });
+
+});
+
 app.get('/insert/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function(req, res) {
   const query1 = 'INSERT INTO device(id, name, location, status) VALUES($1, $2, $3, $4)';
   const query2 = 'INSERT INTO power(id, consumption, time) VALUES($1, $2, $3)';

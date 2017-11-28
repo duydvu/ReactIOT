@@ -48,8 +48,6 @@ export default class Devices extends React.Component {
 class Device_item extends React.Component {
     constructor(props) {
         super(props);
-        var colorList = ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#009688', '#4CAF50', '#FF5722', '#607D8B'];
-        this.color = colorList[Math.floor(Math.random() * 10)];
         this.switch = this.switch.bind(this);
     }
 
@@ -108,13 +106,13 @@ class Device_item extends React.Component {
     render() {
         return (
             <div className="item">
-                <div className="info" style={{ background: this.color }}>
+                <div className="info">
                     <div className="row"><span>ID thiết bị : </span>{this.props._id}</div>
                     <div className="row"><span>Tên : </span>{this.props.name}</div>
                     <div className="row"><span>Vị trí : </span>{this.props.location}</div>
                     <div className="row">
                         <span>Trạng thái : </span>
-                        <Toggle color={this.color} on={this.props.status} switch={this.switch} />
+                        <Toggle on={this.props.status} switch={this.switch} />
                     </div>
                     <div className="row" style={{textAlign: 'center'}}>Tiêu thụ diện</div>
                     <div className="row">
@@ -145,7 +143,7 @@ class Toggle extends React.Component {
         return (
             <div className="toggle">
                 <div className="toggle-bk" onClick={this.handleClick}>
-                    <div className={`toggle-button ${this.state.on?'':'off'}`} style={{background: this.props.color}}></div>
+                    <div className={`toggle-button ${this.state.on?'':'off'}`}></div>
                 </div>
                 <span>{this.state.on ? 'Bật' : 'Tắt'}</span>
             </div>
