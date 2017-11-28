@@ -92,7 +92,7 @@ app.get('/db/:id', function (req, res) {
 });
 
 app.post('/login', function(req, res) {
-  const query = "select * from users where account = $1 and password = $2";
+  const query = "select * from users where account = $1 and password = md5($2)";
   const body = req.body;
   const values = [body.account, body.password];
 
@@ -103,6 +103,22 @@ app.post('/login', function(req, res) {
       return;
     } else {
       res.send(_res.rows);
+    }
+  });
+
+});
+
+app.post('/signup', function(req, res) {
+  const query = "insert into users(id, name, account, password) values($1, $2, $3, md5($4))";
+  const body = req.body;
+  const values = [body.id, body.name, body.account, body.password];
+
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to insert user!');
+    } else {
+      res.send('Successfully inserted user!');
     }
   });
 
