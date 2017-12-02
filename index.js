@@ -72,18 +72,33 @@ app.get('/', function (request, response) {
 });
 
 app.get('/db/:id', function (req, res) {
-  const query = "select device.id, name, status, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id;";
+  // const query = "select device.id, name, status, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id;";
+  const query1 = "select array_agg(status) as status, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id group by room_id, room_name";
+  const query2 = "select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1";
   const body = req.params;
   const values = [body.id];
 
-  pool.query(query, values, (err, _res) => {
+  pool.query(query1, values, (err, _res) => {
 
     if (err) {
       console.log(err.stack);
       res.send('Failed to fetch data!');
       return;
     } else {
-      res.send(_res.rows);
+      if(!_res.row) {
+        pool.query(query2, values, (err, _res) => {
+
+          if (err) {
+            console.log(err.stack);
+            res.send('Failed to fetch data!');
+            return;
+          } else {
+            res.send(_res.rows);
+          }
+
+        });
+      }
+      else res.send(_res.rows);
     }
     
   });
@@ -139,33 +154,20 @@ app.post('/addroom', function (req, res) {
 
 });
 
-app.get('/insert/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function(req, res) {
-  const query1 = 'INSERT INTO device(id, name, location, status) VALUES($1, $2, $3, $4)';
-  const query2 = 'INSERT INTO power(id, consumption, time) VALUES($1, $2, $3)';
+app.get('/insert/:id-:name-:status-:room_id', function(req, res) {
+  const query = 'INSERT INTO device(id, name, status, room_id) VALUES($1, $2, $3, $4)';
   const body = req.params;
-  const time = `${body.year}-${body.month}-${body.day} ${body.hour}:${body.minute}:${body.second}`;
-  const values1 = [body.id, body.name, body.location, body.status];
-  const values2 = [body.id, body.consumption, time];
+  const values = [body.id, body.name, body.status, body.room_id];
 
   // callback
-  pool.query(query1, values1, (err, _res) => {
+  pool.query(query, values, (err, _res) => {
     if (err) {
       console.log(err.stack);
       res.send('Failed to insert data!');
-      return;
     } else {
-
-      pool.query(query2, values2, (err, _res) => {
-        if (err) {
-          console.log(err.stack);
-          res.send('Failed to insert data!');
-        } else {
-          res.send('Successfully inserted data!');
-        }
-      });
-
+      res.send('Successfully inserted data!');
     }
-  })
+  });
 })
 
 app.get('/delete/:id', function (req, res) {
