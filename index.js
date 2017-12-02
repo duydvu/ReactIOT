@@ -84,8 +84,8 @@ app.get('/db/:id', function (req, res) {
       console.log(err.stack);
       res.send('Failed to fetch data!');
       return;
-    } else {
-      if(!_res.row) {
+    } else {console.log(_res.rows);
+      if(!_res.rows) {
         pool.query(query2, values, (err, _res) => {
 
           if (err) {
