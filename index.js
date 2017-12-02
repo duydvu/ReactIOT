@@ -78,27 +78,25 @@ app.get('/db/:id', function (req, res) {
   const body = req.params;
   const values = [body.id];
 
-  pool.query(query1, values, (err, _res) => {
+  pool.query(query1, values, (err, _res1) => {
 
     if (err) {
       console.log(err.stack);
       res.send('Failed to fetch data!');
       return;
-    } else {console.log(_res.rows);
-      if(!_res.rows) {
-        pool.query(query2, values, (err, _res) => {
+    } else {
+      
+      pool.query(query2, values, (err, _res2) => {
 
-          if (err) {
-            console.log(err.stack);
-            res.send('Failed to fetch data!');
-            return;
-          } else {
-            res.send(_res.rows);
-          }
+        if (err) {
+          console.log(err.stack);
+          res.send('Failed to fetch data!');
+          return;
+        } else {
+          res.send({data1: _res1.rows, data2: _res2.rows});
+        }
 
-        });
-      }
-      else res.send(_res.rows);
+      });
     }
     
   });
