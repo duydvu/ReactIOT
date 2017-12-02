@@ -108,7 +108,7 @@ app.get('/db/device/:id', function (req, res) {
   const body = req.params;
   const values = [body.id];
 
-  pool.query(query1, values, (err, _res) => {
+  pool.query(query, values, (err, _res) => {
 
     if (err) {
       console.log(err.stack);

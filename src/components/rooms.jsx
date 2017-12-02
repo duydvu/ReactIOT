@@ -38,6 +38,7 @@ export default class Rooms extends React.Component {
                         <tr>
                             <td>ID phòng:</td>
                             <td>{e.id}</td>
+                            <td>{this.state.rooms.filter(t => t.room_id == e.id)}</td>
                         </tr>
                         <tr>
                             <td>Tên phòng:</td>
