@@ -103,6 +103,25 @@ app.get('/db/:id', function (req, res) {
 
 });
 
+app.get('/db/device/:id', function (req, res) {
+  const query = "select * from device where room_id = $1";
+  const body = req.params;
+  const values = [body.id];
+
+  pool.query(query1, values, (err, _res) => {
+
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to fetch data!');
+      return;
+    } else {      
+      res.send(_res.rows);
+    }
+    
+  });
+
+});
+
 app.post('/login', function(req, res) {
   const query = "select * from users where account = $1 and password = md5($2)";
   const body = req.body;
@@ -168,31 +187,20 @@ app.get('/insert/:id-:name-:status-:room_id', function(req, res) {
   });
 })
 
-app.get('/delete/:id', function (req, res) {
-  const query1 = 'DELETE FROM power WHERE id = $1';
-  const query2 = 'DELETE FROM device WHERE id = $1';
+app.get('/delete/device/:id', function (req, res) {
+  const query = 'DELETE FROM device WHERE id = $1';
   const body = req.params;
   const values = [body.id];
 
   // callback
-  pool.query(query1, values, (err, _res) => {
-    if (err) {
-      console.log(err.stack);
-      res.send('Failed to delete data!');
-      return;
-    } else {
-
-      pool.query(query2, values, (err, _res) => {
-        if (err) {
-          console.log(err.stack);
-          res.send('Failed to delete data!');
-        } else {
-          res.send('Successfully deleted data!');
-        }
-      });
-
-    }
-  })
+    pool.query(query, values, (err, _res) => {
+      if (err) {
+        console.log(err.stack);
+        res.send('Failed to delete data!');
+      } else {
+        res.send('Successfully deleted data!');
+      }
+    });
 })
 
 app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function (req, res) {
