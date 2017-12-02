@@ -30,22 +30,31 @@ export default class Rooms extends React.Component {
             });
     }
 
+    handleClick(id, name) {
+        this.props.push(id, name);
+    }
+
     render() {
-        const rooms = this.state.all_rooms.map((e, i) =>
-            <div key={i}>
+        const rooms = this.state.all_rooms.map((e) =>
+            <div key={e.id}>
                 <table>
                     <tbody>
                         <tr>
                             <td>ID phòng:</td>
                             <td>{e.id}</td>
-                            <td>{this.state.rooms.filter(t => t.room_id == e.id)}</td>
                         </tr>
                         <tr>
                             <td>Tên phòng:</td>
                             <td>{e.room_name}</td>
                         </tr>
+                        <tr>
+                            <td>Thiết bị đang hoạt động:</td>
+                            <td>{this.state.rooms.filter(t => t.room_id == e.id)[0] ? this.state.rooms.filter(t => t.room_id == e.id)[0].active : 0}
+                                /{this.state.rooms.filter(t => t.room_id == e.id)[0] ? this.state.rooms.filter(t => t.room_id == e.id)[0].total : 0}</td>
+                        </tr>
                     </tbody>
                 </table>
+                <div onClick={() => this.handleClick(e.id, e.room_name)}>Xem phòng</div>
             </div>
         )
         return (

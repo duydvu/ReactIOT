@@ -18,7 +18,7 @@ export default class Devices extends React.Component {
 
     fetchData() {
         var self = this;
-        axios.get('https://reactiot.herokuapp.com/db', {
+        axios.get('https://reactiot.herokuapp.com/db/device/'+this.props.match.params.id, {
                 responseType: 'json'
             })
             .then(function (response) {
@@ -35,15 +35,18 @@ export default class Devices extends React.Component {
 
     render() {
         const item = this.state.devices.map((e, i) => 
-            <Device_item key={i} _id={e.id} name={e.name} location={e.location} status={e.status} updateData={this.updateData}/>
+            <Device_item key={i} _id={e.id} name={e.name} status={e.status} updateData={this.updateData}/>
         );
         return (
-            <div className="devices">
-                {item}
+            <div>
+                <h2>{this.props.match.params.name}</h2>
+                <div className="devices">
+                    {item}
+                </div>
             </div>
         )
     }
-}
+} location
 
 class Device_item extends React.Component {
     constructor(props) {
@@ -109,7 +112,6 @@ class Device_item extends React.Component {
                 <div className="info">
                     <div className="row"><span>ID thiết bị : </span>{this.props._id}</div>
                     <div className="row"><span>Tên : </span>{this.props.name}</div>
-                    <div className="row"><span>Vị trí : </span>{this.props.location}</div>
                     <div className="row">
                         <span>Trạng thái : </span>
                         <Toggle on={this.props.status} switch={this.switch} />

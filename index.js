@@ -71,8 +71,13 @@ app.get('/', function (request, response) {
   })
 });
 
+app.get('/room/:name/:id', function (request, response) {
+  response.render('pages/index', {
+    title: 'React Internet of things'
+  })
+});
+
 app.get('/db/:id', function (req, res) {
-  // const query = "select device.id, name, status, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id;";
   const query1 = "select count(case when status=true then 1 end) as active, count(status) as total, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id group by room_id, room_name";
   const query2 = "select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1";
   const body = req.params;
@@ -203,6 +208,30 @@ app.get('/delete/device/:id', function (req, res) {
     });
 })
 
+app.get('/delete/room/:id', function (req, res) {
+  const query1 = 'DELETE FROM device WHERE room_id = $1';
+  const query2 = 'DELETE FROM rooms WHERE id = $1';
+  const body = req.params;
+  const values = [body.id];
+
+  // callback
+  pool.query(query1, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to delete data!');
+    } else {
+      pool.query(query2, values, (err, _res) => {
+        if (err) {
+          console.log(err.stack);
+          res.send('Failed to delete data!');
+        } else {
+          res.send('Successfully deleted data!');
+        }
+      });
+    }
+  });
+})
+
 app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function (req, res) {
   const query1 = 'UPDATE device SET name = $2, location = $3, status = $4 WHERE id = $1';
   const query2 = 'INSERT INTO power(id, consumption, time) VALUES($1, $2, $3)';
@@ -232,6 +261,22 @@ app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hou
   })
 })
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
+    Socket connection
+*/
 io.on('connection', function (socket) {
   console.log('Someone has connected!');
   socket.on('switch', function (body) {
@@ -240,10 +285,26 @@ io.on('connection', function (socket) {
   });
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+    MQTT connection
+*/
 client.on('connect', function () {
   console.log('Successfully Connected!');
-  client.subscribe('demo/chrome_test');
-  client.publish('demo/esp8266', 'off');
+  client.subscribe('Server/esp8266');
+  client.publish('ESP8266', 'off');
 })
 
 client.on('message', function (topic, message) {
