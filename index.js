@@ -176,10 +176,10 @@ app.post('/addroom', function (req, res) {
 
 });
 
-app.get('/insert/:id-:name-:status-:room_id', function(req, res) {
-  const query = 'INSERT INTO device(id, name, status, room_id) VALUES($1, $2, $3, $4)';
+app.get('/insert/:id-:name-:status-:room_id-:timer_status', function(req, res) {
+  const query = 'INSERT INTO device(id, name, status, room_id, timer_status) VALUES($1, $2, $3, $4, $5)';
   const body = req.params;
-  const values = [body.id, body.name, body.status, body.room_id];
+  const values = [body.id, body.name, body.status, body.room_id, body.timer_status];
 
   // callback
   pool.query(query, values, (err, _res) => {
@@ -232,35 +232,56 @@ app.get('/delete/room/:id', function (req, res) {
   });
 })
 
-app.get('/update/:id-:name-:location-:status-:consumption-:year.:month.:day.:hour.:minute.:second', function (req, res) {
-  const query1 = 'UPDATE device SET name = $2, location = $3, status = $4 WHERE id = $1';
-  const query2 = 'INSERT INTO power(id, consumption, time) VALUES($1, $2, $3)';
+app.get('/update/device/:id/:status', function (req, res) {
+  const query = 'UPDATE device SET status = $2 WHERE id = $1';
   const body = req.params;
-  const time = `${body.year}-${body.month}-${body.day} ${body.hour}:${body.minute}:${body.second}`;
-  const values1 = [body.id, body.name, body.location, body.status];
-  const values2 = [body.id, body.consumption, time];
+  const values = [body.id, body.status];
 
   // callback
-  pool.query(query1, values1, (err, _res) => {
+  pool.query(query, values, (err, _res) => {
     if (err) {
       console.log(err.stack);
-      res.send('Failed to update data!');
-      return;
+      res.send({ success: false });
     } else {
-
-      pool.query(query2, values2, (err, _res) => {
-        if (err) {
-          console.log(err.stack);
-          res.send('Failed to update data!');
-        } else {
-          res.send('Successfully updated data!');
-        }
-      });
-
+      console.log('Successfully updated status!');
+      res.send({ success: true });
     }
-  })
+  });
 })
 
+app.get('/update/room/:id/:status', function (req, res) {
+  const query = 'UPDATE device SET status = $2 WHERE room_id = $1';
+  const body = req.params;
+  const values = [body.id, body.status];
+
+  // callback
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send({ success: false });
+    } else {
+      console.log('Successfully updated status!');
+      res.send({ success: true });
+    }
+  });
+})
+
+app.get('/update_timer/device/:id/:status', function (req, res) {
+  const query = 'UPDATE device SET timer_status = $2 WHERE id = $1';
+  const body = req.params;
+  const values = [body.id, body.status];
+
+  // callback
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      res.send({ success: false });
+    } else {
+      console.log('Successfully updated timer status!');
+      res.send({ success: true });
+    }
+  });
+})
 
 
 

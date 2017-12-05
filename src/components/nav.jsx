@@ -9,7 +9,7 @@ export default class Nav extends React.Component {
     render() {
         return (
             <div className="nav">
-                <a href="./">
+                <a href="/">
                     <img src={logo} alt="ReactIOT logo" width="50" height="50" />
                     <h1>ReactIOT</h1>
                 </a>

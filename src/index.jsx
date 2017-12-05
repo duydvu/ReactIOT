@@ -13,7 +13,7 @@ import Nav from 'components/nav.jsx'
 import './sass/main.sass'
 
 import 'images/apps.png'
-import 'images/background.png'
+import 'images/bliss.jpg'
     
 ReactDom.render(
     <div id="content">
