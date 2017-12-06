@@ -3,9 +3,11 @@ var socketio = require('socket.io');
 var https = require('https');
 var { Pool, Client } = require('pg');
 var httpProxy = require('http-proxy');
+var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
 var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
 var mqtt = require('mqtt');
 
 var client = mqtt.connect({
@@ -43,10 +45,56 @@ else {
   console.log('Build on production!');
 }
 
+passport.use(new LocalStrategy({
+  usernameField: 'username',
+  passwordField: 'password'
+},
+  function (username, password, cb) {
+    const query = "select * from users where account = $1 and password = md5($2)";
+    const values = [username, password];
+
+    pool.query(query, values, (err, _res) => {
+      if (err) {
+        console.log(err.stack);
+        return cb(err);
+      } else {
+        if (!_res.rows) return cb(null, false);
+        return cb(null, _res.rows[0]);
+      }
+    });
+  }));
+
+passport.serializeUser(function (user, cb) {
+  cb(null, user.id);
+});
+
+passport.deserializeUser(function (id, cb) {
+  const query = "select * from users where id=$1";
+  const values = [id];
+
+  pool.query(query, values, (err, _res) => {
+    if (err) {
+      console.log(err.stack);
+      return cb(err);
+    } else {
+      cb(null, _res.rows[0]);
+    }
+  });
+});
+
 
 app.use(express.static(__dirname + '/public'));
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(require('express-session')({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -65,10 +113,30 @@ const io = socketio(
   })
 );
 
-app.get('/', function (request, response) {
+app.get('/', 
+  require('connect-ensure-login').ensureLoggedIn(),
+  function (request, response) {
   response.render('pages/index', {
     title: 'React Internet of things'
   })
+});
+
+app.get('/login', function (request, response) {
+  response.render('pages/index', {
+    title: 'Đăng nhập'
+  })
+});
+
+app.post('/login',
+  passport.authenticate('local', { failureRedirect: '/login' }),
+  function (req, res) {
+    res.redirect('/');
+});
+
+app.get('/logout',
+  function (req, res) {
+    req.logout();
+    res.redirect('/');
 });
 
 app.get('/room/:name/:id', function (request, response) {
@@ -77,11 +145,10 @@ app.get('/room/:name/:id', function (request, response) {
   })
 });
 
-app.get('/db/:id', function (req, res) {
+app.get('/db', function (req, res) {
   const query1 = "select count(case when status=true then 1 end) as active, count(status) as total, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id group by room_id, room_name";
   const query2 = "select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1";
-  const body = req.params;
-  const values = [body.id];
+  const values = [req.user.id];
 
   pool.query(query1, values, (err, _res1) => {
 
@@ -123,23 +190,6 @@ app.get('/db/device/:id', function (req, res) {
       res.send(_res.rows);
     }
     
-  });
-
-});
-
-app.post('/login', function(req, res) {
-  const query = "select * from users where account = $1 and password = md5($2)";
-  const body = req.body;
-  const values = [body.account, body.password];
-
-  pool.query(query, values, (err, _res) => {
-    if (err) {
-      console.log(err.stack);
-      res.send('Failed to fetch data!');
-      return;
-    } else {
-      res.send(_res.rows);
-    }
   });
 
 });
@@ -302,7 +352,7 @@ io.on('connection', function (socket) {
   console.log('Someone has connected!');
   socket.on('switch', function (body) {
     console.log(body);
-    client.publish('demo/switch', body);
+    // client.publish('demo/switch', body);
   });
 });
 

@@ -9,6 +9,7 @@ import {
 import Devices from 'components/devices.jsx'
 import Rooms from 'components/rooms.jsx'
 import Nav from 'components/nav.jsx'
+import Login from 'components/login.jsx'
 
 import './sass/main.sass'
 
@@ -20,8 +21,9 @@ ReactDom.render(
         <Nav />
         <Router>
             <div style={{paddingTop: '50px'}}>
+                <Route exact path="/login" component={Login} />
                 <Route exact path="/" render={({history}) => 
-                    <Rooms push={(id, name) => { history.push('/room/' + name + '/' + id); document.title = "Room " + id }}/>
+                    <Rooms history={history}/>
                 } />
                 <Route exact path="/room/:name/:id" component={Devices} />
             </div>

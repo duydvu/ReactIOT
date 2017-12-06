@@ -19,7 +19,7 @@ export default class Rooms extends React.Component {
 
     fetchData() {
         var self = this;
-        axios.get('https://reactiot.herokuapp.com/db/1', {
+        axios.get('http://localhost:3000/db', {
             responseType: 'json'
         })
             .then(function (response) {
@@ -31,7 +31,7 @@ export default class Rooms extends React.Component {
     }
 
     handleClick(id, name) {
-        this.props.push(id, name);
+        this.props.history.push('/room/' + name + '/' + id); 
     }
 
     render() {
@@ -41,15 +41,15 @@ export default class Rooms extends React.Component {
                     <table>
                         <tbody>
                             <tr>
-                                <td>ID phòng:</td>
+                                <td>ID:</td>
                                 <td>{e.id}</td>
                             </tr>
                             <tr>
-                                <td>Tên phòng:</td>
+                                <td>Phòng:</td>
                                 <td>{e.room_name}</td>
                             </tr>
                             <tr>
-                                <td>Thiết bị đang hoạt động:</td>
+                                <td>Thiết bị:</td>
                                 <td>{this.state.rooms.filter(t => t.room_id == e.id)[0] ? this.state.rooms.filter(t => t.room_id == e.id)[0].active : 0}
                                     /{this.state.rooms.filter(t => t.room_id == e.id)[0] ? this.state.rooms.filter(t => t.room_id == e.id)[0].total : 0}</td>
                             </tr>

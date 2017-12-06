@@ -30,7 +30,7 @@ export default class Devices extends React.Component {
     }
 
     updateData(message, data) {
-        socket.emit('switch', data);
+        socket.emit('switch', data);console.log(data);
     }
 
     render() {
