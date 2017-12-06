@@ -1,7 +1,7 @@
 import React from 'react'
 import axios from 'axios'
 import openSocket from 'socket.io-client';
-const socket = openSocket('https://reactiot.herokuapp.com/');
+const socket = openSocket('http://localhost:3000/');
 
 export default class Rooms extends React.Component {
     constructor(props) {
@@ -15,6 +15,7 @@ export default class Rooms extends React.Component {
 
     componentWillMount() {
         this.fetchData();
+        document.title = "Trang chủ"
     }
 
     fetchData() {

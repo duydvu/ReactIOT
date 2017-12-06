@@ -9,6 +9,8 @@ var bcrypt = require('bcrypt');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var mqtt = require('mqtt');
+var flash = require('connect-flash');
+var ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 
 var client = mqtt.connect({
   host: 'm14.cloudmqtt.com',
@@ -94,6 +96,7 @@ app.use(require('express-session')({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash());
 
 app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -113,9 +116,7 @@ const io = socketio(
   })
 );
 
-app.get('/', 
-  require('connect-ensure-login').ensureLoggedIn(),
-  function (request, response) {
+app.get('/', ensureLoggedIn(), function (request, response) {
   response.render('pages/index', {
     title: 'React Internet of things'
   })
@@ -128,24 +129,23 @@ app.get('/login', function (request, response) {
 });
 
 app.post('/login',
-  passport.authenticate('local', { failureRedirect: '/login' }),
+  passport.authenticate('local'),
   function (req, res) {
-    res.redirect('/');
+    res.send('1');
 });
 
-app.get('/logout',
-  function (req, res) {
+app.get('/logout', function (req, res) {
     req.logout();
     res.redirect('/');
 });
 
-app.get('/room/:name/:id', function (request, response) {
+app.get('/room/:name/:id', ensureLoggedIn(), function (request, response) {
   response.render('pages/index', {
     title: 'React Internet of things'
   })
 });
 
-app.get('/db', function (req, res) {
+app.get('/db', ensureLoggedIn(), function (req, res) {
   const query1 = "select count(case when status=true then 1 end) as active, count(status) as total, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id group by room_id, room_name";
   const query2 = "select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1";
   const values = [req.user.id];
@@ -175,7 +175,7 @@ app.get('/db', function (req, res) {
 
 });
 
-app.get('/db/device/:id', function (req, res) {
+app.get('/db/device/:id', ensureLoggedIn(), function (req, res) {
   const query = "select * from device where room_id = $1";
   const body = req.params;
   const values = [body.id];
@@ -210,7 +210,7 @@ app.post('/signup', function(req, res) {
 
 });
 
-app.post('/addroom', function (req, res) {
+app.post('/addroom', ensureLoggedIn(), function (req, res) {
   const query = "insert into rooms(user_id, name) values($1, $2)";
   const body = req.body;
   const values = [body.user_id, body.name];
@@ -226,7 +226,7 @@ app.post('/addroom', function (req, res) {
 
 });
 
-app.get('/insert/:id-:name-:status-:room_id-:timer_status', function(req, res) {
+app.get('/insert/:id-:name-:status-:room_id-:timer_status', ensureLoggedIn(), function(req, res) {
   const query = 'INSERT INTO device(id, name, status, room_id, timer_status) VALUES($1, $2, $3, $4, $5)';
   const body = req.params;
   const values = [body.id, body.name, body.status, body.room_id, body.timer_status];
@@ -242,7 +242,7 @@ app.get('/insert/:id-:name-:status-:room_id-:timer_status', function(req, res) {
   });
 })
 
-app.get('/delete/device/:id', function (req, res) {
+app.get('/delete/device/:id', ensureLoggedIn(), function (req, res) {
   const query = 'DELETE FROM device WHERE id = $1';
   const body = req.params;
   const values = [body.id];
@@ -258,7 +258,7 @@ app.get('/delete/device/:id', function (req, res) {
     });
 })
 
-app.get('/delete/room/:id', function (req, res) {
+app.get('/delete/room/:id', ensureLoggedIn(), function (req, res) {
   const query1 = 'DELETE FROM device WHERE room_id = $1';
   const query2 = 'DELETE FROM rooms WHERE id = $1';
   const body = req.params;
@@ -282,7 +282,7 @@ app.get('/delete/room/:id', function (req, res) {
   });
 })
 
-app.get('/update/device/:id/:status', function (req, res) {
+app.get('/update/device/:id/:status', ensureLoggedIn(), function (req, res) {
   const query = 'UPDATE device SET status = $2 WHERE id = $1';
   const body = req.params;
   const values = [body.id, body.status];
@@ -299,7 +299,7 @@ app.get('/update/device/:id/:status', function (req, res) {
   });
 })
 
-app.get('/update/room/:id/:status', function (req, res) {
+app.get('/update/room/:id/:status', ensureLoggedIn(), function (req, res) {
   const query = 'UPDATE device SET status = $2 WHERE room_id = $1';
   const body = req.params;
   const values = [body.id, body.status];
@@ -316,7 +316,7 @@ app.get('/update/room/:id/:status', function (req, res) {
   });
 })
 
-app.get('/update_timer/device/:id/:status', function (req, res) {
+app.get('/update_timer/device/:id/:status', ensureLoggedIn(), function (req, res) {
   const query = 'UPDATE device SET timer_status = $2 WHERE id = $1';
   const body = req.params;
   const values = [body.id, body.status];
@@ -351,8 +351,7 @@ app.get('/update_timer/device/:id/:status', function (req, res) {
 io.on('connection', function (socket) {
   console.log('Someone has connected!');
   socket.on('switch', function (body) {
-    console.log(body);
-    // client.publish('demo/switch', body);
+    client.publish('ESP8266', JSON.stringify(body));
   });
 });
 
@@ -375,7 +374,6 @@ io.on('connection', function (socket) {
 client.on('connect', function () {
   console.log('Successfully Connected!');
   client.subscribe('Server/esp8266');
-  client.publish('ESP8266', 'off');
 })
 
 client.on('message', function (topic, message) {

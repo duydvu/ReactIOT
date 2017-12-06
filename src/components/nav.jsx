@@ -20,7 +20,10 @@ export default class Nav extends React.Component {
                     <img src={logo} alt="ReactIOT logo" width="50" height="50" />
                     <h1>ReactIOT</h1>
                 </a>
-                <div onClick={this.logOut}>Đăng xuất</div>
+                <Route path="/" render={({location}) => 
+                    location.pathname === '/login' ? null :
+                        <div onClick={this.logOut} className="logout"><span>Đăng xuất</span></div>
+                }/>
             </div>
         )
     }

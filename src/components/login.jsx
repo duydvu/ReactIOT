@@ -1,5 +1,5 @@
 import React from 'react'
-import axios from 'axios'
+import Axios from 'axios'
 
 export default class Login extends React.Component {
     constructor(props) {
@@ -7,6 +7,10 @@ export default class Login extends React.Component {
         this.state = {username: '', password: ''};
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
+    }
+
+    componentDidMount() {
+        document.title = "Đăng nhập"
     }
 
     handleInputChange(e) {
@@ -18,25 +22,48 @@ export default class Login extends React.Component {
 
     handleSubmit(e) {
         e.preventDefault();
-        axios.post('http://localhost:3000/login', {
+        Axios.post('http://localhost:3000/login', {
             username: this.state.username,
             password: this.state.password,
-        })
+        }).then(response => {
+            if(response.data == 1) this.props.history.replace('/')
+        }).catch((error) => {
+            if(error.response.status == 401)
+                alert("Sai password!");
+            else alert("Kiem tra ket noi!");
+        });
     }
 
     render() {
         return (
-            <div>
+            <div className="login">
                 <form onSubmit={this.handleSubmit}>
-                    <label>
-                        Tài khoản:
-                        <input type="text" name="username" onChange={this.handleInputChange}/>
-                    </label>
-                    <label>
-                        Mật khẩu:
-                        <input type="password" name="password" onChange={this.handleInputChange}/>
-                    </label>
-                    <input type="submit" value="Submit" />
+                    <div className="grid w3">
+                        <div style={{gridColumn: '1/4'}}></div>
+                        <div></div>
+                        <div className="grid gap-10">
+                            <div></div>
+                            <div className="grid w2">
+                                <label htmlFor="username">
+                                    Tài khoản:
+                                </label>
+                                <input type="text" name="username" id="username" onChange={this.handleInputChange}/>
+                            </div>
+                            <div className="grid w2">
+                                <label htmlFor="password">
+                                    Mật khẩu:
+                                </label>
+                                <input type="password" name="password" id="password" onChange={this.handleInputChange}/>
+                            </div>
+                            <div></div>
+                            <div className="grid w3">
+                                <div></div>
+                                <input type="submit" value="Đăng nhập" />
+                                <div></div>
+                            </div>
+                        </div>
+                        <div></div>
+                    </div>
                 </form>
             </div>
         )

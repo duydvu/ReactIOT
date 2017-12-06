@@ -2,7 +2,7 @@ import React from 'react'
 import axios from 'axios'
 import Chart from 'chart.js'
 import openSocket from 'socket.io-client';
-const socket = openSocket('https://reactiot.herokuapp.com/');
+const socket = openSocket('http://localhost:3000/');
 
 export default class Devices extends React.Component {
     constructor(props) {
@@ -14,6 +14,7 @@ export default class Devices extends React.Component {
 
     componentWillMount() {
         this.fetchData();
+        document.title = "Thiết bị"
     }
 
     fetchData() {
@@ -30,7 +31,7 @@ export default class Devices extends React.Component {
     }
 
     updateData(message, data) {
-        socket.emit('switch', data);console.log(data);
+        socket.emit('switch', data);
     }
 
     render() {
@@ -144,8 +145,8 @@ class Toggle extends React.Component {
     render() {
         return (
             <div className="toggle">
-                <div className="toggle-bk" onClick={this.handleClick}>
-                    <div className={`toggle-button ${this.state.on?'':'off'}`}></div>
+                <div className={`toggle-bk ${this.state.on ? '' : 'off'}`} onClick={this.handleClick}>
+                    <div className="toggle-button"></div>
                 </div>
                 <span>{this.state.on ? 'Bật' : 'Tắt'}</span>
             </div>

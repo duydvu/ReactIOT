@@ -18,14 +18,20 @@ import 'images/bliss.jpg'
     
 ReactDom.render(
     <div id="content">
-        <Nav />
         <Router>
-            <div style={{paddingTop: '50px'}}>
-                <Route exact path="/login" component={Login} />
-                <Route exact path="/" render={({history}) => 
-                    <Rooms history={history}/>
-                } />
-                <Route exact path="/room/:name/:id" component={Devices} />
+            <div>
+                <Route render={(props) =>
+                    <Nav {...props} />
+                }/>
+                <div style={{paddingTop: '50px'}}>
+                    <Route exact path="/login" render={(props) =>
+                        <Login {...props} />
+                    } />
+                    <Route exact path="/" render={(props) => 
+                        <Rooms {...props}/>
+                    } />
+                    <Route exact path="/room/:name/:id" component={Devices} />
+                </div>
             </div>
         </Router>
     </div>
