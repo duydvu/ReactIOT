@@ -339,43 +339,40 @@ app.get('/update_timer/device/:id/:status', ensureLoggedIn(), function (req, res
 
 
 
-
-
-
-
-
-
 /* 
     Socket connection
 */
 io.on('connection', function (socket) {
   console.log('Someone has connected!');
   socket.on('switch', function (body) {
-    client.publish('ESP8266', JSON.stringify(body));
+    client.publish('ServerLocal/Control', JSON.stringify(body));
   });
+
+  client.on('message', function (topic, message) {
+    if (topic === 'Server/Current') {
+      socket.emit('current', JSON.parse(message));
+    }
+    else if(topic === 'Server/Power') {
+      const json = JSON.parse(message);
+      const query = 'INSERT INTO power(id, value, date) VALUES($1, $2, $3)';
+      const values = [json.ID, json.value, json.time];
+      // callback
+      pool.query(query, values, (err, _res) => {
+        if (err) {
+          console.log(err.stack);
+        }
+      });
+    }
+  }) 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
     MQTT connection
 */
 client.on('connect', function () {
   console.log('Successfully Connected!');
-  client.subscribe('Server/esp8266');
+  client.subscribe('Server/Status');
+  client.subscribe('Server/Current');
+  client.subscribe('Server/Power');
+  client.subscribe('Server/CheckID');
 })
-
-client.on('message', function (topic, message) {
-  console.log(message.toString())
-}) 

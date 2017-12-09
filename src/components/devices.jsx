@@ -7,19 +7,25 @@ const socket = openSocket('http://localhost:3000/');
 export default class Devices extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { devices: [] };
+        this.state = { devices: [] , current: new Array(49).fill(0)};
         this.fetchData = this.fetchData.bind(this);
         this.updateData = this.updateData.bind(this);
     }
 
     componentWillMount() {
         this.fetchData();
-        document.title = "Thiết bị"
+        document.title = "Thiết bị";
+        let self = this;
+        socket.on('current', (data) => {
+            this.setState((prevState, props) => ({
+                current: [...prevState.current.slice(-99), data]
+            }));
+        })
     }
 
     fetchData() {
         var self = this;
-        axios.get('https://reactiot.herokuapp.com/db/device/'+this.props.match.params.id, {
+        axios.get('http://localhost:3000/db/device/'+this.props.match.params.id, {
                 responseType: 'json'
             })
             .then(function (response) {
@@ -36,7 +42,7 @@ export default class Devices extends React.Component {
 
     render() {
         const item = this.state.devices.map((e, i) => 
-            <Device_item key={i} _id={e.id} name={e.name} status={e.status} updateData={this.updateData}/>
+            <Device_item key={i} _id={e.id} name={e.name} status={e.status} current={this.state.current.filter(t => t.ID==e.id)} updateData={this.updateData}/>
         );
         return (
             <div>
@@ -58,53 +64,56 @@ class Device_item extends React.Component {
     switch(status) {
         var self = this;
         this.props.updateData('demo/switch', {
-            id: self.props._id,
-            status: JSON.stringify(status)
+            ID: parseInt(self.props._id),
+            Status: status? '1':'0'
         });
                 
     }
 
-    componentDidMount() {
-        // var self = this;
-        // var ctx = this.canvas.getContext('2d');
-        // var data = this.props.consumption.map((e, i) => {
-        //     return {
-        //         x: new Date(self.props.time[i]).getMinutes(),
-        //         y: e
-        //     }
-        // });
-        // var myChart = new Chart(ctx, {
-        //     type: 'line',
-        //     data: {
-        //         datasets: [{
-        //             data: data,
-        //             fill: false,
-        //             borderColor: '#fff',
-        //             cubicInterpolationMode: 'monotone'
-        //         }]
-        //     },
-        //     options: {
-        //         scales: {
-        //             xAxes: [{
-        //                 type: 'linear',
-        //                 position: 'bottom',
-        //                 ticks: {
-        //                     fontColor: '#fff',
-        //                 },
-        //             }],
-        //             yAxes: [{
-        //                 ticks: {
-        //                     fontColor: '#fff',
-        //                     beginAtZero: true,
-        //                     suggestedMax: 300
-        //                 },
-        //             }]
-        //         },
-        //         legend: {
-        //             display: false
-        //         },
-        //     }
-        // });
+    componentWillUpdate() {
+        var self = this;
+        var ctx = this.canvas.getContext('2d');
+        var data = this.props.current.map((e, i) => {
+            return {
+                x: i,
+                y: e.value
+            }
+        });
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    data: data,
+                    fill: false,
+                    borderColor: '#fff',
+                    cubicInterpolationMode: 'monotone'
+                }]
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        type: 'linear',
+                        position: 'bottom',
+                        ticks: {
+                            fontColor: '#fff',
+                        },
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            fontColor: '#fff',
+                            beginAtZero: true,
+                            suggestedMax: 10
+                        },
+                    }]
+                },
+                legend: {
+                    display: false
+                },
+                animation: {
+                    duration: 0
+                }
+            }
+        });
     }
 
     render() {
@@ -117,9 +126,13 @@ class Device_item extends React.Component {
                         <span>Trạng thái : </span>
                         <Toggle on={this.props.status} switch={this.switch} />
                     </div>
-                    <div className="row" style={{textAlign: 'center'}}>Tiêu thụ diện</div>
+                    <div className="row" style={{textAlign: 'center'}}>Cường độ dòng</div>
                     <div className="row">
                         <canvas className="chart" ref={can => {this.canvas = can}}></canvas>
+                    </div>
+                    <div className="row" style={{textAlign: 'center'}}>Năng lượng tiêu thụ</div>
+                    <div className="row">
+                        <canvas className="chart" ref={can => {this.canvas2 = can}}></canvas>
                     </div>
                 </div>
             </div>
