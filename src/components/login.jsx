@@ -26,7 +26,7 @@ export default class Login extends React.Component {
             username: this.state.username,
             password: this.state.password,
         }).then(response => {
-            if(response.data == 1) this.props.history.replace('/')
+            this.props.history.replace('/')
         }).catch((error) => {
             if(error.response.status == 401)
                 alert("Sai password!");

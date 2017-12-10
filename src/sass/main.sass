@@ -27,6 +27,7 @@ a
     height: 50px
     background: #fff
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1)
+    z-index: 10000
     a
         display: block
     h1
@@ -37,13 +38,15 @@ a
         font-size: 1.5em
     h1, img
         float: left
-    .logout
-        position: relative
+    .logout, .toggleAddRoom, .toggleAddDevice
         float: right
         line-height: 50px
         padding: 0 20px
         font-size: 1.1em
         cursor: pointer
+        user-select: none
+    .logout
+        position: relative
         transition: 0.3s ease-in-out
         &:before
             content: ""
@@ -140,3 +143,5 @@ h2
 
 @import 'rooms'
 @import 'login'
+@import 'form'
+

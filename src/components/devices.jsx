@@ -29,7 +29,9 @@ export default class Devices extends React.Component {
                 responseType: 'json'
             })
             .then(function (response) {
-                self.setState({ devices: response.data });
+                var data = response.data;console.log(data);
+                self.setState({ devices: data });
+                socket.emit('subscribe', data.map(e => (e.id)));
             })
             .catch(function (error) {
                 console.log(error);
@@ -68,6 +70,9 @@ class Device_item extends React.Component {
             Status: status? '1':'0'
         });
                 
+    }
+
+    componentDidMount() {
     }
 
     componentWillUpdate() {

@@ -1,0 +1,19 @@
+.addRoom, .addDevice
+    position: fixed
+    top: 50px
+    left: 0
+    height: calc(100% - 50px)
+    width: 100%
+    z-index: 10000
+    display: none
+    background: rgba(#000, 0.8)
+    align-items: center
+    justify-content: center
+    color: #fff
+    &.on
+        display: flex
+    form
+        padding: 20px
+        background: rgba(#000, 0.5)
+    input[type=submit]
+        margin: 10px auto
