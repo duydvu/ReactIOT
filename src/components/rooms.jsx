@@ -1,7 +1,7 @@
 import React from 'react'
 import axios from 'axios'
 import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:3000/');
+const socket = openSocket(API_URL);
 
 export default class Rooms extends React.Component {
     constructor(props) {
@@ -20,7 +20,7 @@ export default class Rooms extends React.Component {
 
     fetchData() {
         var self = this;
-        axios.get('http://localhost:3000/db', {
+        axios.get(API_URL + 'db', {
             responseType: 'json'
         })
             .then(function (response) {

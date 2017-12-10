@@ -10,7 +10,7 @@ export default class Nav extends React.Component {
     }
 
     logOut() {
-        window.location.href = 'http://localhost:3000/logout'
+        window.location.href = API_URL + 'logout'
     }
 
     render() {

@@ -22,7 +22,7 @@ export default class Login extends React.Component {
 
     handleSubmit(e) {
         e.preventDefault();
-        Axios.post('http://localhost:3000/login', {
+        Axios.post(API_URL + 'login', {
             username: this.state.username,
             password: this.state.password,
         }).then(response => {
@@ -30,7 +30,7 @@ export default class Login extends React.Component {
         }).catch((error) => {
             if(error.response.status == 401)
                 alert("Sai password!");
-            else alert("Kiem tra ket noi!");
+            else alert("Kiểm tra kết nối!");
         });
     }
 

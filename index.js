@@ -194,6 +194,25 @@ app.get('/db/device/:id', ensureLoggedIn(), function (req, res) {
 
 });
 
+app.get('/db/power/:id', ensureLoggedIn(), function (req, res) {
+  const query = "select * from power where id = $1";
+  const body = req.params;
+  const values = [body.id];
+
+  pool.query(query, values, (err, _res) => {
+
+    if (err) {
+      console.log(err.stack);
+      res.send('Failed to fetch data!');
+      return;
+    } else {      
+      res.send(_res.rows);
+    }
+    
+  });
+
+});
+
 app.post('/signup', function(req, res) {
   const query = "insert into users(name, account, password) values($1, $2, md5($3))";
   const body = req.body;
@@ -347,23 +366,10 @@ io.on('connection', function (socket) {
   socket.on('switch', function (body) {
     client.publish('ServerLocal/Control', JSON.stringify(body));
   });
-
-  client.on('message', function (topic, message) {
-    if (topic === 'Server/Current') {
-      socket.emit('current', JSON.parse(message));
-    }
-    else if(topic === 'Server/Power') {
-      const json = JSON.parse(message);
-      const query = 'INSERT INTO power(id, value, date) VALUES($1, $2, $3)';
-      const values = [json.ID, json.value, json.time];
-      // callback
-      pool.query(query, values, (err, _res) => {
-        if (err) {
-          console.log(err.stack);
-        }
-      });
-    }
-  }) 
+  socket.join('Server/Status');
+  socket.join('Server/Current');
+  socket.join('Server/Power');
+  socket.join('Server/CheckID');
 });
 
 /*
@@ -376,3 +382,21 @@ client.on('connect', function () {
   client.subscribe('Server/Power');
   client.subscribe('Server/CheckID');
 })
+
+client.on('message', function (topic, message) {
+  if (topic === 'Server/Current') {
+    console.log(message);
+    io.sockets.in(topic).emit('current', JSON.parse(message));
+  }
+  else if (topic === 'Server/Power') {
+    const json = JSON.parse(message);
+    const query = 'INSERT INTO power(id, value, date) VALUES($1, $2, $3)';
+    const values = [json.ID, json.value, json.time];
+    // callback
+    pool.query(query, values, (err, _res) => {
+      if (err) {
+        console.log(err.stack);
+      }
+    });
+  }
+}) 

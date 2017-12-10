@@ -8,6 +8,11 @@ var TARGET = process.env.npm_lifecycle_event;
 // Get common config
 var common = require('./webpack.common.config.js');
 
+var API_URL = [
+    JSON.stringify('http://localhost:3000/'),               // development
+    JSON.stringify('https://reactiot.herokuapp.com/')       // production
+]
+
 // If the script is "npm start"
 if (TARGET === 'start') {
     module.exports = merge(common, {
@@ -28,7 +33,10 @@ if (TARGET === 'start') {
             }
         },
         plugins: [
-            new webpack.HotModuleReplacementPlugin()  // This makes everything reloaded when you change files
+            new webpack.HotModuleReplacementPlugin(),  // This makes everything reloaded when you change files
+            new webpack.DefinePlugin({
+                'API_URL': API_URL[0]
+            })
         ]
     });
 }
@@ -64,6 +72,9 @@ if (TARGET === 'build') {
                     join_vars: true
                 }
             }),
+            new webpack.DefinePlugin({
+                'API_URL': API_URL[1]
+            })
         ]
 
     });

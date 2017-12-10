@@ -2,7 +2,7 @@ import React from 'react'
 import axios from 'axios'
 import Chart from 'chart.js'
 import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:3000/');
+const socket = openSocket(API_URL);
 
 export default class Devices extends React.Component {
     constructor(props) {
@@ -12,7 +12,7 @@ export default class Devices extends React.Component {
         this.updateData = this.updateData.bind(this);
     }
 
-    componentWillMount() {
+    componentDidMount() {
         this.fetchData();
         document.title = "Thiết bị";
         let self = this;
@@ -25,7 +25,7 @@ export default class Devices extends React.Component {
 
     fetchData() {
         var self = this;
-        axios.get('http://localhost:3000/db/device/'+this.props.match.params.id, {
+        axios.get(API_URL + 'db/device/'+this.props.match.params.id, {
                 responseType: 'json'
             })
             .then(function (response) {
@@ -75,7 +75,7 @@ class Device_item extends React.Component {
         var ctx = this.canvas.getContext('2d');
         var data = this.props.current.map((e, i) => {
             return {
-                x: i,
+                x: this.props.current.length - i - 1,
                 y: e.value
             }
         });
