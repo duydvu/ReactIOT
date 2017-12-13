@@ -1,4 +1,5 @@
 var express = require('express');
+var session = require('express-session');
 var socketio = require('socket.io');
 var https = require('https');
 var { Pool, Client } = require('pg');
@@ -87,7 +88,10 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(require('express-session')({
+app.use(session({
+  store: new (require('connect-pg-simple')(session))({
+    pool
+  }),
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: false
