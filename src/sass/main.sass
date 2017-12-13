@@ -5,6 +5,14 @@ html, body
 *
     font-family: 'Roboto', sans-serif
 
+@keyframes fadein 
+    from
+        margin-top: -20px
+        opacity: 0 
+    to
+        opacity: 1
+        margin-top: 0
+
 #content 
     position: absolute
     width: 100%
@@ -48,6 +56,7 @@ a
     .logout
         position: relative
         transition: 0.3s ease-in-out
+        z-index: 1
         &:before
             content: ""
             position: absolute
@@ -68,6 +77,9 @@ a
                 
 h2
     text-align: center
+    font-size: 1.5em
+    text-decoration: underline
+    font-style: italic
 
 .devices
     display: flex
@@ -76,6 +88,7 @@ h2
         padding: 10px
         width: 100/3*1%
         box-sizing: border-box
+        animation: fadein 1s
         .info
             padding: 20px
             border-radius: 10px
@@ -97,6 +110,13 @@ h2
                 text-align: right
             .row > span
                 float: left
+    .delete
+        cursor: pointer
+        margin: 0 auto
+        background: red
+        color: #fff
+        padding: 5px 20px
+        border-radius: 10px
 
 .toggle
     padding: 5px 0
@@ -131,6 +151,12 @@ h2
 .chart
     width: 100%
 
+.loading
+    text-align: center
+    font-size: 1.2em
+    width: 100%
+    padding: 50px 0
+
 @media screen and (max-width: 960px)
     .devices
         .item
@@ -144,4 +170,5 @@ h2
 @import 'rooms'
 @import 'login'
 @import 'form'
+
 

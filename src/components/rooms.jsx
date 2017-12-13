@@ -11,6 +11,7 @@ export default class Rooms extends React.Component {
             all_rooms: []
         }
         this.fetchData = this.fetchData.bind(this);
+        this.delete = this.delete.bind(this);
     }
 
     componentWillMount() {
@@ -35,8 +36,18 @@ export default class Rooms extends React.Component {
         this.props.history.push('/room/' + name + '/' + id); 
     }
 
+    delete(id) {
+        axios.get(API_URL + 'delete/room/' + id).then(response => {
+            alert('Xóa thành công!');
+            window.location.reload();
+        }).catch(err => {
+            alert('Xóa thất bại!');
+            window.location.reload();
+        })
+    }
+
     render() {
-        const rooms = this.state.all_rooms.map((e) =>
+        const rooms = this.state.all_rooms.length ? this.state.all_rooms.map((e) =>
             <div key={e.id}>
                 <div>
                     <table>
@@ -57,9 +68,12 @@ export default class Rooms extends React.Component {
                         </tbody>
                     </table>
                     <div className="show_room" onClick={() => this.handleClick(e.id, e.room_name)}>Xem phòng</div>
+                    <div>
+                        <div className="delete" onClick={() => {this.delete(e.id)}}>Xóa</div>
+                    </div>
                 </div>
             </div>
-        )
+        ) : <div className="loading">Loading...</div>;
         return (
             <div className="rooms">
                 {rooms}

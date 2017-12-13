@@ -14,7 +14,6 @@ export default class Nav extends React.Component {
             deviceName: '',
             status: false,
             roomId: '',
-            timerStatus: false
         };
         this.logOut = this.logOut.bind(this);
         this.toggleAddRoom = this.toggleAddRoom.bind(this);
@@ -48,22 +47,22 @@ export default class Nav extends React.Component {
         Axios.post(API_URL + 'addroom', {
             name: this.state.roomName,
         }).then(response => {
-            console.log(response);
+            window.location.reload();
         }).catch((error) => {
             alert("Kiểm tra kết nối!");
         });
     }
 
     addDevice(e) {
-        e.preventDefault();console.log(this.state);
+        e.preventDefault();
+        var s = this.state;
         Axios.post(API_URL + 'device', {
-            ID: parseInt(this.state.deviceID),
-            name: this.state.deviceName,
-            status: this.state.status,
-            room_id: this.state.roomId,
-            timer_status: this.state.timerStatus
+            ID: parseInt(s.deviceID),
+            name: s.deviceName,
+            status: s.status,
+            room_id: s.roomId,
         }).then(response => {
-            console.log(response);
+            window.location.reload();
         }).catch((error) => {
             alert("Kiểm tra kết nối!");
         });
@@ -109,16 +108,8 @@ export default class Nav extends React.Component {
                             <input type="text" name="deviceName" id="deviceName" onChange={this.handleInputChange}/>
                         </div>
                         <div>
-                            <label htmlFor="status">Trạng thái:</label>
-                            <input type="text" name="status" id="status" onChange={this.handleInputChange}/>
-                        </div>
-                        <div>
                             <label htmlFor="roomId">ID phòng:</label>
                             <input type="text" name="roomId" id="roomId" onChange={this.handleInputChange}/>
-                        </div>
-                        <div>
-                            <label htmlFor="timerStatus">Hẹn giờ:</label>
-                            <input type="text" name="timerStatus" id="timerStatus" onChange={this.handleInputChange}/>
                         </div>
                         <div>
                             <input type="submit" value="Thêm"/>

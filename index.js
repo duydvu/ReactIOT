@@ -174,11 +174,11 @@ app.get('/db', ensureLoggedIn(), function (req, res) {
 });
 
 app.get('/db/device/:id', ensureLoggedIn(), function (req, res) {
-  const query1 = "select power.id, array_agg(value) as value, array_agg(date) as date, name, status, timer_status from power inner join (select * from device where room_id = 2) as device on power.id = device.id group by power.id, device.name, device.status, device.timer_status";
+  const query = "select id, array_agg(value) as value, array_agg(date) as date, name, status, timer_status from (select device.id as id, value, date, name, status, timer_status from power inner join (select * from device where room_id = $1) as device on power.id = device.id order by date desc) as final group by id, name, status, timer_status";
   const body = req.params;
   const values = [body.id];
-
-  pool.query(query1, values, (err, _res) => {
+  
+  pool.query(query, values, (err, _res) => {
     if (err) {
       console.log(err.stack);
       res.send('Failed to fetch data!');
@@ -257,93 +257,49 @@ app.post('/addroom', ensureLoggedIn(), function (req, res) {
 app.post('/device', ensureLoggedIn(), function (req, res) {
   client.publish('ServerLocal/CheckID', JSON.stringify(req.body), { qos: 1 }, function (err) {
     if (err) {
-      console.log(err);
-      res.sendStatus(400);
+      console.log('Send add device message through MQTT failed');
     }
     else {
-      res.sendStatus(200);
+      console.log('Send add device message OK!');
     }
   });
 })
 
 app.get('/delete/device/:id', ensureLoggedIn(), function (req, res) {
-  const query = 'DELETE FROM device WHERE id = $1';
-  const body = req.params;
-  const values = [body.id];
 
-  // callback
-  pool.query(query, values, (err, _res) => {
+  client.publish('ServerLocal/SyncDatabase', JSON.stringify({
+    Action: 'DeleteDevice',
+    Content: {
+      deviceID: req.params.id
+    }
+  }), (err) => {
     if (err) {
-      console.log(err.stack);
-      res.send('Failed to delete data!');
-    } else {
-      res.send('Successfully deleted data!');
+      console.log('Send delete device message through MQTT failed');
+    }
+    else {
+      console.log('Send delete device message OK!');
     }
   });
+  
 })
 
 app.get('/delete/room/:id', ensureLoggedIn(), function (req, res) {
-  const query1 = 'DELETE FROM device WHERE room_id = $1';
-  const query2 = 'DELETE FROM rooms WHERE id = $1';
-  const body = req.params;
-  const values = [body.id];
-
-  // callback
-  pool.query(query1, values, (err, _res) => {
+  
+  client.publish('ServerLocal/SyncDatabase', JSON.stringify({
+    Action: 'DeleteRoom',
+    Content: {
+      deviceID: req.params.id
+    }
+  }), (err) => {
     if (err) {
-      console.log(err.stack);
-      res.send('Failed to delete data!');
-    } else {
-      pool.query(query2, values, (err, _res) => {
-        if (err) {
-          console.log(err.stack);
-          res.send('Failed to delete data!');
-        } else {
-          res.send('Successfully deleted data!');
-        }
-      });
+      console.log('Send delete room message through MQTT failed');
+    }
+    else {
+      console.log('Send delete room message OK!');
     }
   });
+
 })
-
-app.get('/update/room/:id/:status', ensureLoggedIn(), function (req, res) {
-  const query = 'UPDATE device SET status = $2 WHERE room_id = $1';
-  const body = req.params;
-  const values = [body.id, body.status];
-
-  // callback
-  pool.query(query, values, (err, _res) => {
-    if (err) {
-      console.log(err.stack);
-      res.send({ success: false });
-    } else {
-      console.log('Successfully updated status!');
-      res.send({ success: true });
-    }
-  });
-})
-
-app.get('/update_timer/device/:id/:status/:duration', ensureLoggedIn(), function (req, res) {
-  const query = 'UPDATE device SET timer_status = $2 WHERE id = $1';
-  const body = req.params;
-  const values = [body.id, body.status];
-
-  // callback
-  pool.query(query, values, (err, _res) => {
-    if (err) {
-      console.log(err.stack);
-      res.send({ success: false });
-    } else {
-      console.log('Successfully updated timer status!');
-      res.send({ success: true });
-    }
-  });
-})
-
-
-
-
-
 
 
 /* 
@@ -369,48 +325,69 @@ io.on('connection', function (socket) {
     MQTT connection
 */
 client.on('connect', function () {
-  console.log('Successfully Connected!');
+  console.log('MQTT connection established!');
   client.subscribe('Server/Status');
   client.subscribe('Server/Current');
   client.subscribe('Server/Power');
   client.subscribe('Server/CheckID');
   client.subscribe('Server/Control');
+  client.subscribe('Server/DeleteDevice');
+  client.subscribe('Server/DeleteRoom');
 })
 
 client.on('message', (topic, message) => {
+
   if (topic == 'Server/Current') {
     let json = JSON.parse(message);
-    io.sockets.in(topic).emit('current', json);
+    console.log('Emit: ' + topic + json.ID + ', value: ' + JSON.stringify(json))
+    io.sockets.in(topic + json.ID).emit('current', json);
   }
+
   else if(topic == 'Server/Power') { 
     let json = JSON.parse(message);
+    console.log('Update power: ' + JSON.stringify(json));
     let query = 'INSERT INTO power(id, value, date) VALUES($1, $2, $3)';
     let values = [json.ID, json.value, json.time];
     // callback
     pool.query(query, values, (err, _res) => {
       if (err) {
-        console.log(err.stack);
+        console.log('Update power failed');
+      }
+      else {
+        console.log('Update power OK!');
       }
     });
   }
+
   else if(topic == 'Server/CheckID') {console.log(message)
     if(message != 'ID not matched') {
-      let query = 'insert into device(id, name, status, room_id, timer_status) values($1, $2, $3, $4, $5)';
-      let json = JSON.parse(message);console.log(json);
-      let values = [json.ID, json.name, json.status, json.room_id, json.timer_status];
+      let query1 = 'insert into device(id, name, status, room_id, timer_status) values($1, $2, $3, $4, $5)';
+      let query2 = 'insert into power(id, value, date) values($1, $2, $3)';
+      let json = JSON.parse(message);
+      let values1 = [json.ID, json.name, json.status, json.room_id, false];
+      let values2 = [json.ID, 0, new Date(new Date() - 86400).toUTCString()];
 
       // callback
-      pool.query(query, values, (err, _res) => {
+      pool.query(query1, values1, (err, _res) => {
         if (err) {
           console.log(err.stack);
           console.log('Failed to add device!');
         }
         else {
-          console.log('Successfully added device!');
+          pool.query(query2, values2, (err, _res) => {
+            if (err) {
+              console.log(err.stack);
+              console.log('Failed to add device!');
+            }
+            else {
+              console.log('Successfully added device!');
+            }
+          });
         }
       });
     }
   }
+
   else if(topic == 'Server/Control') {
     let query = 'UPDATE device SET status = $2 WHERE id = $1';
     let json = JSON.parse(message);
@@ -426,4 +403,59 @@ client.on('message', (topic, message) => {
       }
     });
   }
+
+  else if(topic == 'Server/DeleteDevice') {
+    let query1 = 'DELETE FROM power WHERE id = $1';
+    let query2 = 'DELETE FROM device WHERE id = $1';
+    let body = req.params;
+    let values = [body.id];
+
+    pool.query(query1, values, (err, _res) => {
+      if (err) {
+        console.log(err.stack);
+        console.log('Delete device#1 failed')
+      } else {
+        pool.query(query2, values, (err, _res) => {
+          if (err) {
+            console.log(err.stack);
+            console.log('Delete device#2 failed')
+          } else {
+            console.log('Delete device OK!')
+          }
+        });
+      }
+    });
+  }
+
+  else if(topic == 'Server/DeleteRoom') {
+    const query1 = 'delete from power p using device d where p.id = d.id and d.room_id = $1';
+    const query2 = 'DELETE FROM device WHERE room_id = $1';
+    const query3 = 'DELETE FROM rooms WHERE id = $1';
+    const body = req.params;
+    const values = [body.id];
+
+    pool.query(query1, values, (err, _res) => {
+      if (err) {
+        console.log(err.stack);
+        console.log('Delete room#1 failed')
+      } else {
+        pool.query(query2, values, (err, _res) => {
+          if (err) {
+            console.log(err.stack);
+            console.log('Delete room#2 failed')
+          } else {
+            pool.query(query3, values, (err, _res) => {
+              if (err) {
+                console.log(err.stack);
+                console.log('Delete room#3 failed')
+              } else {
+                console.log('Delete room OK!')
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+
 }) 
