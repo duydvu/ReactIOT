@@ -259,12 +259,13 @@ app.post('/addroom', ensureLoggedIn(), function (req, res) {
 });
 
 app.post('/device', ensureLoggedIn(), function (req, res) {
-  client.publish('ServerLocal/CheckID', JSON.stringify({
-      ...req.body,
-      timer_status: false,
-      value: 0,
-      date: new Date(new Date() - 86400).toDateString()
-    }), { qos: 1 }, function (err) {
+  data = Object.assign({}, req.body, {
+    timer_status: false,
+    value: 0,
+    date: new Date(new Date() - 86400).toDateString()
+  });
+  console.log(data);
+  client.publish('ServerLocal/CheckID', JSON.stringify(data), { qos: 1 }, function (err) {
     if (err) {
       console.log('Send add device message through MQTT failed');
       res.sendStatus(400);
