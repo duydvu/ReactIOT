@@ -30,7 +30,9 @@ ReactDom.render(
                     <Route exact path="/" render={(props) => 
                         <Rooms {...props}/>
                     } />
-                    <Route exact path="/room/:name/:id" component={Devices} />
+                    <Route exact path="/room/:name/:id" render={(props) => 
+                        <Devices {...props}/>
+                    } />
                 </div>
             </div>
         </Router>

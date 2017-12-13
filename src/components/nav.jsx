@@ -7,6 +7,7 @@ export default class Nav extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            toggleNav: false,
             addRoom: false,
             roomName: '',
             addDevice: false,
@@ -16,6 +17,7 @@ export default class Nav extends React.Component {
             roomId: '',
         };
         this.logOut = this.logOut.bind(this);
+        this.toggleNav = this.toggleNav.bind(this);
         this.toggleAddRoom = this.toggleAddRoom.bind(this);
         this.toggleAddDevice = this.toggleAddDevice.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -28,6 +30,10 @@ export default class Nav extends React.Component {
             if (response.status == 200)
                 window.location.href = API_URL;
         })
+    }
+
+    toggleNav() {
+        this.setState(prev => ({ toggleNav: !prev.toggleNav }))
     }
 
     toggleAddRoom() {
@@ -75,17 +81,24 @@ export default class Nav extends React.Component {
                     <img src={logo} alt="ReactIOT logo" width="50" height="50" />
                     <h1>ReactIOT</h1>
                 </a>
-                <Route path="/" render={({ location }) =>
-                    location.pathname === '/login' ? null :
-                        <div onClick={this.logOut} className="logout"><span>Đăng xuất</span></div>
-                } />
-                <Route path="/" render={({ location }) =>
-                    location.pathname === '/login' ? null :
-                        <div onClick={this.toggleAddRoom} className="toggleAddRoom"><span>Thêm phòng</span></div>
-                } />
-                <Route exact path="/room/:name/:id" render={() => 
-                    <div onClick={this.toggleAddDevice} className="toggleAddDevice"><span>Thêm thiết bị</span></div>
-                }/>
+                <div className="toggleNavButton" onClick={this.toggleNav}>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <div className={this.state.toggleNav ? "toggleNav active" : "toggleNav"}>
+                    <Route exact path="/room/:name/:id" render={() => 
+                        <div onClick={this.toggleAddDevice}><span>Thêm thiết bị</span></div>
+                    }/>
+                    <Route exact path="/" render={() =>
+                        <div onClick={this.toggleAddRoom}><span>Thêm phòng</span></div>
+                    } />
+                    <Route path="/" render={({ location }) =>
+                        location.pathname === '/login' ? 
+                            <div><span>Đăng ký</span></div> :
+                            <div onClick={this.logOut}><span>Đăng xuất</span></div>
+                    } />
+                </div>
                 <div className={this.state.addRoom ? "addRoom on" : "addRoom"}>
                     <form onSubmit={this.addRoom}>
                         <div>

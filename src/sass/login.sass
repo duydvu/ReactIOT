@@ -1,4 +1,21 @@
 .login
+    display: flex
+    align-items: center
+    justify-content: center
+    min-height: 500px
+    form 
+        padding: 20px 40px
+        background: rgba(#000, 0.8)
+        border-radius: 10px
+    div
+        margin: 20px
+        display: flex
+    label
+        color: #eee
+        width: 100px
+        display: block
+        font-size: 1.2em
+        line-height: 36px
     input[type=text], input[type=password]
         border: none
         outline: none
@@ -9,27 +26,12 @@
         border: none
         border-radius: 10px
         outline: none
+        height: 36px
+        line-height: 36px
+        margin: 0 auto
         color: #eee
         font-weight: bold
-        background: #F44336
+        background: #2196F3
         cursor: pointer
         transition: 0.3s ease-in-out
-        &:hover
-            background: #FF1744
-
-.grid
-    display: grid
-    grid-auto-rows: minmax(30px, auto)
-
-.grid-column
-    grid-auto-flow: column
-
-.grid-row
-    grid-auto-flow: row
-
-.gap-10
-    grid-gap: 10px
-
-@for $i from 1 through 5
-    .w#{$i}
-        grid-template-columns: repeat($i, 1fr)
+        padding: 0 20px

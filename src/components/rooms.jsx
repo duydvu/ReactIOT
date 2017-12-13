@@ -8,10 +8,14 @@ export default class Rooms extends React.Component {
         super(props);
         this.state = {
             rooms: [],
-            all_rooms: []
+            all_rooms: [],
+            WillUnmount: false,
         }
+        this.username = '';
         this.fetchData = this.fetchData.bind(this);
         this.delete = this.delete.bind(this);
+        this.goBack = this.goBack.bind(this);
+        this.goForward = this.goForward.bind(this);
     }
 
     componentWillMount() {
@@ -25,6 +29,7 @@ export default class Rooms extends React.Component {
             responseType: 'json'
         })
             .then(function (response) {
+                self.username = response.data.user.name;
                 self.setState({ rooms: response.data.data1, all_rooms: response.data.data2 });
             })
             .catch(function (error) {
@@ -33,7 +38,11 @@ export default class Rooms extends React.Component {
     }
 
     handleClick(id, name) {
-        this.props.history.push('/room/' + name + '/' + id); 
+        this.setState({ WillUnmount: true }, () => {
+            setTimeout(() => {
+                this.props.history.push('/room/' + name + '/' + id); 
+            }, 1000)
+        })
     }
 
     delete(id) {
@@ -46,9 +55,17 @@ export default class Rooms extends React.Component {
         })
     }
 
+    goBack() {
+        this.props.history.goBack();
+    }
+
+    goForward() {
+        this.props.history.goForward();
+    }
+
     render() {
         const rooms = this.state.all_rooms.length ? this.state.all_rooms.map((e) =>
-            <div key={e.id}>
+            <div key={e.id} className={ this.state.WillUnmount ? "unmount" : ""}>
                 <div>
                     <table>
                         <tbody>
@@ -68,15 +85,20 @@ export default class Rooms extends React.Component {
                         </tbody>
                     </table>
                     <div className="show_room" onClick={() => this.handleClick(e.id, e.room_name)}>Xem phòng</div>
-                    <div>
-                        <div className="delete" onClick={() => {this.delete(e.id)}}>Xóa</div>
-                    </div>
+                    <div className="delete" onClick={() => {this.delete(e.id)}}>Xóa</div>
                 </div>
             </div>
-        ) : <div className="loading">Loading...</div>;
+        ) : <div className="loading">Đang tải...</div>;
         return (
-            <div className="rooms">
-                {rooms}
+            <div>
+                <div className="header">
+                    <div onClick={this.goBack}>&#8617;</div>
+                    { this.username ? <h2><span>{'Xin chào ' + this.username + '!'}</span></h2> : null }
+                    <div onClick={this.goForward}>&#8618;</div>
+                </div>
+                <div className="rooms">
+                    {rooms}
+                </div>
             </div>
         )
     }

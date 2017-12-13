@@ -38,32 +38,21 @@ export default class Login extends React.Component {
         return (
             <div className="login">
                 <form onSubmit={this.handleSubmit}>
-                    <div className="grid w3">
-                        <div style={{gridColumn: '1/4'}}></div>
-                        <div></div>
-                        <div className="grid gap-10">
-                            <div></div>
-                            <div className="grid w2">
-                                <label htmlFor="username">
-                                    Tài khoản:
-                                </label>
-                                <input type="text" name="username" id="username" onChange={this.handleInputChange}/>
-                            </div>
-                            <div className="grid w2">
-                                <label htmlFor="password">
-                                    Mật khẩu:
-                                </label>
-                                <input type="password" name="password" id="password" onChange={this.handleInputChange}/>
-                            </div>
-                            <div></div>
-                            <div className="grid w3">
-                                <div></div>
-                                <input type="submit" value="Đăng nhập" />
-                                <div></div>
-                            </div>
+                        <div>
+                            <label htmlFor="username">
+                                Tài khoản:
+                            </label>
+                            <input type="text" name="username" id="username" placeholder="account1" onChange={this.handleInputChange}/>
                         </div>
-                        <div></div>
-                    </div>
+                        <div>
+                            <label htmlFor="password">
+                                Mật khẩu:
+                            </label>
+                            <input type="password" name="password" id="password" placeholder="z" onChange={this.handleInputChange}/>
+                        </div>
+                        <div>
+                            <input type="submit" value="Đăng nhập" />
+                        </div>
                 </form>
             </div>
         )

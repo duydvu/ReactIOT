@@ -46,40 +46,74 @@ a
         font-size: 1.5em
     h1, img
         float: left
-    .logout, .toggleAddRoom, .toggleAddDevice
+    .toggleNavButton
         float: right
-        line-height: 50px
-        padding: 0 20px
-        font-size: 1.1em
+        height: 30px
+        width: 40px
+        padding: 12.5px 10px 7.5px 10px
         cursor: pointer
-        user-select: none
-    .logout
-        position: relative
-        transition: 0.3s ease-in-out
-        z-index: 1
-        &:before
-            content: ""
-            position: absolute
-            width: 0
-            height: 0
-            top: 0
-            right: 0
-            transform: translate(50%, -50%)
-            background: #304FFE
+        transition: 0.1s linear
+        div
+            height: 5px
+            width: 40px
+            background: #444
+            margin-bottom: 5px
+            border-radius: 3px
             transition: inherit
-            border-radius: 50%
-            z-index: -1
         &:hover
-            color: #fff
-            &:before
-                width: 300px
-                height: 300px
-                
-h2
-    text-align: center
-    font-size: 1.5em
-    text-decoration: underline
-    font-style: italic
+            div
+                background: #000
+    .toggleNav
+        position: fixed
+        right: 0
+        top: 50px
+        height: calc(100% - 50px)
+        min-width: 200px
+        background: #444
+        transition: 0.2s ease-in-out
+        transform: translateX(110%)
+        z-index: 1
+        div
+            line-height: 50px
+            padding: 0 60px 0 40px
+            margin-bottom: 10px
+            font-size: 1.1em
+            cursor: pointer
+            user-select: none
+            color: #fafafa
+            background: inherit
+            transition: inherit
+            &:hover
+                background: #111
+        &.active
+            transform: translateX(0)
+    
+
+.header
+    display: flex
+    justify-content: center
+    margin: 20px 0
+    h2, div
+        margin: 0
+        text-align: center
+        font-size: 1.5em
+        font-weight: normal
+        padding: 10px 20px
+        background: rgba(#fff, 0.5)
+        cursor: pointer
+        transition: 0.5s
+        animation: fadein 1s
+        &:hover
+            background: #fff
+    h2
+        border-left: 5px solid #fff
+        border-right: 5px solid #fff
+    div:first-child
+        border-top-left-radius: 50%
+        border-bottom-left-radius: 50%
+    div:last-child
+        border-top-right-radius: 50%
+        border-bottom-right-radius: 50%
 
 .devices
     display: flex
