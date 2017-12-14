@@ -63,7 +63,7 @@ export default class Nav extends React.Component {
         e.preventDefault();
         var s = this.state;
         Axios.post(API_URL + 'device', {
-            ID: parseInt(s.deviceID),
+            id: parseInt(s.deviceID),
             name: s.deviceName,
             status: s.status,
             room_id: s.roomId,

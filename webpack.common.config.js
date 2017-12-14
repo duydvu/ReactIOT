@@ -43,6 +43,28 @@ module.exports = {
                 })
             },
             {
+                test: /\.(css)$/,
+                use: ExtractTextPlugin.extract({
+                    fallback: "style-loader",
+                    use: [
+                        {
+                            loader: "css-loader",
+                            options: { minimize: true }
+                        },
+                        {
+                            loader: 'postcss-loader',
+                            options: {
+                                plugins: function () {
+                                    return [autoprefixer({
+                                        browsers: ['last 3 versions', 'Firefox >= 20', 'iOS >=7']
+                                    })]
+                                }
+                            }
+                        },
+                    ]
+                })
+            },
+            {
                 test: /\.(png|svg|jpg|gif)$/,
                 use: [
                     {

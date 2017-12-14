@@ -11,6 +11,7 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var mqtt = require('mqtt');
 var flash = require('connect-flash');
+var crypto = require('crypto');
 var ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 
 var client = mqtt.connect({
@@ -179,7 +180,7 @@ app.get('/db', ensureLoggedIn(), function (req, res) {
 });
 
 app.get('/db/device/:id', ensureLoggedIn(), function (req, res) {
-  const query = "select id, (array_agg(value))[1:10] as value, (array_agg(date))[1:10] as date, name, status, timer_status from (select device.id as id, value, date, name, status, timer_status from power inner join (select * from device where room_id = $1) as device on power.id = device.id order by date desc) as final group by id, name, status, timer_status";
+  const query = "select id, (array_agg(value))[1:10] as value, (array_agg(date))[1:10] as date, name, status, timer_status, time from(select device.id as id, value, date, name, status, timer_status, time from power inner join (select * from device where room_id = $1) as device on power.id = device.id order by date desc) as final group by id, name, status, timer_status, time";
   const body = req.params;
   const values = [body.id];
   
@@ -245,91 +246,165 @@ app.post('/changePass', ensureLoggedIn(), function (req, res) {
 });
 
 app.post('/addroom', ensureLoggedIn(), function (req, res) {
+  const body = req.body;
   data = {
-    
+    userId: req.user.id,
+    id: crypto.createHash('md5').update(body.name).digest('hex'),
+    room_name: body.name
   }
-  client.publish('ServerLocal/CheckID', JSON.stringify(data), { qos: 2 }, function (err) {
+  console.log('Hash: ' + data.id);
+
+  client.publish('ServerLocal/SyncDatabase', JSON.stringify({
+    Action: 'AddRoom',
+    Content: data
+  }), { qos: 2 }, (err) => {
     if (err) {
-      console.log('Send add device message through MQTT failed');
-      res.sendStatus(400);
+      console.log('Send add room message through MQTT failed');
     }
     else {
-      console.log('Send add device message OK!');
-      res.sendStatus(200);
+      console.log('Send add room message OK!');
     }
   });
-
-  const query = "insert into rooms(user_id, name) values($1, $2)";
-  const body = req.body;
-  const values = [req.user.id, body.name];
-
-  pool.query(query, values, (err, _res) => {
-    if (err) {
-      console.log(err.stack);
-      res.send('Failed to insert room!');
-    } else {
-      res.send('Successfully inserted room!');
-    }
-  });
+  res.sendStatus(200);
 
 });
 
 app.post('/device', ensureLoggedIn(), function (req, res) {
   data = Object.assign({}, req.body, {
+    userId: req.user.id,
     timer_status: false,
-    value: 0,
-    date: new Date(new Date() - 86400).toDateString()
+    time: '00:00:00',
+    value: [0],
+    date: [new Date(new Date() - 86400).toDateString()]
   });
 
   client.publish('ServerLocal/CheckID', JSON.stringify(data), { qos: 2 }, function (err) {
     if (err) {
       console.log('Send add device message through MQTT failed');
-      res.sendStatus(400);
     }
     else {
       console.log('Send add device message OK!');
-      res.sendStatus(200);
     }
   });
+  res.sendStatus(200);
 })
 
-app.get('/delete/device/:id', ensureLoggedIn(), function (req, res) {
+app.get('/delete/device/:id/:room_id', ensureLoggedIn(), function (req, res) {
 
-  client.publish('ServerLocal/SyncDatabase', JSON.stringify({
-    Action: 'DeleteDevice',
-    Content: {
-      ID: req.params.id
-    }
-  }), { qos: 2 }, (err) => {
+  const query1 = 'DELETE FROM power WHERE id = $1';
+  const query2 = 'DELETE FROM device WHERE id = $1';
+  const query3 = "select count(case when status=true then 1 end) as active, count(status) as total, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id group by room_id, room_name";
+  const values1 = [req.params.id];
+  const values2 = [req.user.id];
+
+  pool.query(query1, values1, (err) => {
     if (err) {
-      console.log('Send delete device message through MQTT failed');
-      res.sendStatus(400);
-    }
-    else {
-      console.log('Send delete device message OK!');
-      res.sendStatus(200);
+      console.log(err.stack);
+      console.log('Delete device#1 failed')
+    } else {
+      pool.query(query2, values1, (err) => {
+        if (err) {
+          console.log(err.stack);
+          console.log('Delete device#2 failed')
+        } else {
+          console.log('Delete device OK!')
+
+          pool.query(query3, values2, (err, _res) => {
+
+            if (err) {
+              console.log(err.stack);
+              console.log('Get Room Detail not OK!');
+            } else {
+
+              client.publish('ServerLocal/SyncDatabase', JSON.stringify({
+                Action: 'DeleteDevice',
+                Content: {
+                  ID: req.params.id
+                }
+              }), { qos: 2 }, (err) => {
+                if (err) {
+                  console.log('Send delete device message through MQTT failed');
+                }
+                else {
+                  console.log('Send delete device message OK!');
+                }
+              });
+
+              client.publish('ServerLocal/SyncDatabase', JSON.stringify({
+                Action: 'SyncRoomDetail',
+                Content: {
+                  room_id: req.params.room_id,
+                  total: _res.rows.length,
+                  roomDetail: _res.rows
+                }
+              }), { qos: 2 }, (err) => {
+                if (err) {
+                  console.log('Send room detail message through MQTT failed');
+                }
+                else {
+                  console.log('Send room detail device message OK!');
+                }
+              });
+
+            }
+
+          });
+
+        }
+      });
     }
   });
+
+  res.sendStatus(200);
   
 })
 
 app.get('/delete/room/:id', ensureLoggedIn(), function (req, res) {
-  
-  client.publish('ServerLocal/SyncDatabase', JSON.stringify({
-    Action: 'DeleteRoom',
-    Content: {
-      ID: req.params.id
-    }
-  }), { qos: 2 }, (err) => {
+
+  const query1 = 'delete from power p using device d where p.id = d.id and d.room_id = $1';
+  const query2 = 'DELETE FROM device WHERE room_id = $1';
+  const query3 = 'DELETE FROM rooms WHERE id = $1';
+  const values = [req.params.id];
+
+  pool.query(query1, values, (err) => {
     if (err) {
-      console.log('Send delete room message through MQTT failed');
-      res.sendStatus(400);
-    }
-    else {
-      console.log('Send delete room message OK!');
-      res.sendStatus(200);
+      console.log(err.stack);
+      console.log('Delete room#1 failed')
+    } else {
+      pool.query(query2, values, (err) => {
+        if (err) {
+          console.log(err.stack);
+          console.log('Delete room#2 failed')
+        } else {
+          pool.query(query3, values, (err) => {
+            if (err) {
+              console.log(err.stack);
+              console.log('Delete room#3 failed')
+            } else {
+              console.log('Delete room OK!')
+
+              client.publish('ServerLocal/SyncDatabase', JSON.stringify({
+                Action: 'DeleteRoom',
+                Content: {
+                  ID: req.params.id
+                }
+              }), { qos: 2 }, (err) => {
+                if (err) {
+                  console.log('Send delete room message through MQTT failed');
+                }
+                else {
+                  console.log('Send delete room message OK!');
+                }
+              });
+
+            }
+          });
+        }
+      });
     }
   });
+
+  res.sendStatus(200);
 
 })
 
@@ -370,6 +445,7 @@ client.on('connect', function () {
   client.subscribe('Server/Control');
   client.subscribe('Server/DeleteDevice');
   client.subscribe('Server/DeleteRoom');
+  client.subscribe('Server/AddRoom');
 })
 
 client.on('message', (topic, message) => {
@@ -399,25 +475,53 @@ client.on('message', (topic, message) => {
   else if(topic == 'Server/CheckID') {
     if (json.ok) {
       
-      let query1 = 'insert into device(id, name, status, room_id, timer_status) values($1, $2, $3, $4, $5)';
+      let query1 = 'insert into device(id, name, status, room_id, timer_status, time) values($1, $2, $3, $4, $5, $6)';
       let query2 = 'insert into power(id, value, date) values($1, $2, $3)';
-      let values1 = [json.ID, json.name, json.status, json.room_id, json.timer_status];
-      let values2 = [json.ID, json.value, json.date];
+      let query3 = "select count(case when status=true then 1 end) as active, count(status) as total, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id group by room_id, room_name";
+      let values1 = [json.id, json.name, json.status, json.room_id, json.timer_status, json.time];
+      let values2 = [json.id, json.value[0], json.date[0]];
+      let values3 = [json.userId];
 
       // callback
-      pool.query(query1, values1, (err, _res) => {
+      pool.query(query1, values1, (err) => {
         if (err) {
           console.log(err.stack);
           console.log('Failed to add device!');
         }
         else {
-          pool.query(query2, values2, (err, _res) => {
+          pool.query(query2, values2, (err) => {
             if (err) {
               console.log(err.stack);
               console.log('Failed to add device!');
             }
             else {
               console.log('Successfully added device!');
+
+              pool.query(query3, values3, (err, _res) => {
+
+                if (err) {
+                  console.log(err.stack);
+                  console.log('Get Room Detail not OK!');
+                } else {
+
+                  client.publish('ServerLocal/SyncDatabase', JSON.stringify({
+                    Action: 'SyncRoomDetail',
+                    Content: {
+                      roomDetail: _res.rows
+                    }
+                  }), { qos: 2 }, (err) => {
+                    if (err) {
+                      console.log('Send room detail message through MQTT failed');
+                    }
+                    else {
+                      console.log('Send room detail device message OK!');
+                    }
+                  });
+
+                }
+
+              });
+
             }
           });
         } 
@@ -444,54 +548,15 @@ client.on('message', (topic, message) => {
     });
   }
 
-  else if(topic == 'Server/DeleteDevice') {
-    let query1 = 'DELETE FROM power WHERE id = $1';
-    let query2 = 'DELETE FROM device WHERE id = $1';
-    let values = [json.ID];
+  else if(topic == 'Server/AddRoom') {
+    let query = "insert into rooms(user_id, id, name) values($1, $2, $3)";
+    let values = [json.userId, json.id, json.room_name];
 
-    pool.query(query1, values, (err, _res) => {
+    pool.query(query, values, (err, _res) => {
       if (err) {
-        console.log(err.stack);
-        console.log('Delete device#1 failed')
+        console.log('Add room failed');
       } else {
-        pool.query(query2, values, (err, _res) => {
-          if (err) {
-            console.log(err.stack);
-            console.log('Delete device#2 failed')
-          } else {
-            console.log('Delete device OK!')
-          }
-        });
-      }
-    });
-  }
-
-  else if(topic == 'Server/DeleteRoom') {
-    let query1 = 'delete from power p using device d where p.id = d.id and d.room_id = $1';
-    let query2 = 'DELETE FROM device WHERE room_id = $1';
-    let query3 = 'DELETE FROM rooms WHERE id = $1';
-    let values = [json.ID];
-
-    pool.query(query1, values, (err, _res) => {
-      if (err) {
-        console.log(err.stack);
-        console.log('Delete room#1 failed')
-      } else {
-        pool.query(query2, values, (err, _res) => {
-          if (err) {
-            console.log(err.stack);
-            console.log('Delete room#2 failed')
-          } else {
-            pool.query(query3, values, (err, _res) => {
-              if (err) {
-                console.log(err.stack);
-                console.log('Delete room#3 failed')
-              } else {
-                console.log('Delete room OK!')
-              }
-            });
-          }
-        });
+        console.log('Add room OK!');
       }
     });
   }
