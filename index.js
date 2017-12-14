@@ -92,9 +92,10 @@ app.use(session({
   store: new (require('connect-pg-simple')(session))({
     pool
   }),
-  secret: 'keyboard cat',
+  secret: 'bla bla bla',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -124,6 +125,12 @@ app.get('/', ensureLoggedIn(), function (request, response) {
   })
 });
 
+app.get('/room/:name/:id', ensureLoggedIn(), function (request, response) {
+  response.render('pages/index', {
+    title: 'React Internet of things'
+  })
+});
+
 app.get('/login', function (request, response) {
   response.render('pages/index', {
     title: 'Đăng nhập'
@@ -141,12 +148,6 @@ app.get('/logout', function (req, res) {
   res.sendStatus(200);
 });
 
-app.get('/room/:name/:id', ensureLoggedIn(), function (request, response) {
-  response.render('pages/index', {
-    title: 'React Internet of things'
-  })
-});
-
 app.get('/db', ensureLoggedIn(), function (req, res) {
   const query1 = "select count(case when status=true then 1 end) as active, count(status) as total, room_id, room_name from device inner join (select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1) as news on news.id=room_id group by room_id, room_name";
   const query2 = "select rooms.id, rooms.name as room_name from rooms inner join users on users.id=user_id and users.id=$1";
@@ -156,7 +157,7 @@ app.get('/db', ensureLoggedIn(), function (req, res) {
 
     if (err) {
       console.log(err.stack);
-      res.send('Failed to fetch data!');
+      res.sendStatus(400);
       return;
     } else {
 
@@ -164,7 +165,7 @@ app.get('/db', ensureLoggedIn(), function (req, res) {
 
         if (err) {
           console.log(err.stack);
-          res.send('Failed to fetch data!');
+          res.sendStatus(400);
           return;
         } else {
           res.send({ data1: _res1.rows, data2: _res2.rows, user: req.user });
@@ -178,15 +179,14 @@ app.get('/db', ensureLoggedIn(), function (req, res) {
 });
 
 app.get('/db/device/:id', ensureLoggedIn(), function (req, res) {
-  const query = "select id, array_agg(value) as value, array_agg(date) as date, name, status, timer_status from (select device.id as id, value, date, name, status, timer_status from power inner join (select * from device where room_id = $1) as device on power.id = device.id order by date desc) as final group by id, name, status, timer_status";
+  const query = "select id, (array_agg(value))[1:10] as value, (array_agg(date))[1:10] as date, name, status, timer_status from (select device.id as id, value, date, name, status, timer_status from power inner join (select * from device where room_id = $1) as device on power.id = device.id order by date desc) as final group by id, name, status, timer_status";
   const body = req.params;
   const values = [body.id];
   
   pool.query(query, values, (err, _res) => {
     if (err) {
       console.log(err.stack);
-      res.send('Failed to fetch data!');
-      return;
+      res.sendStatus(400);
     } else {
       res.send(_res.rows);
     }
@@ -202,9 +202,11 @@ app.post('/signup', function (req, res) {
   pool.query(query, values, (err, _res) => {
     if (err) {
       console.log(err.stack);
-      res.send('Failed to insert user!');
+      console.log("Registration failed!")
+      res.sendStatus(400);
     } else {
-      res.send('Successfully inserted user!');
+      console.log("Registration succeed!")      
+      res.sendStatus(200);
     }
   });
 
@@ -243,6 +245,20 @@ app.post('/changePass', ensureLoggedIn(), function (req, res) {
 });
 
 app.post('/addroom', ensureLoggedIn(), function (req, res) {
+  data = {
+    
+  }
+  client.publish('ServerLocal/CheckID', JSON.stringify(data), { qos: 2 }, function (err) {
+    if (err) {
+      console.log('Send add device message through MQTT failed');
+      res.sendStatus(400);
+    }
+    else {
+      console.log('Send add device message OK!');
+      res.sendStatus(200);
+    }
+  });
+
   const query = "insert into rooms(user_id, name) values($1, $2)";
   const body = req.body;
   const values = [req.user.id, body.name];
@@ -264,8 +280,8 @@ app.post('/device', ensureLoggedIn(), function (req, res) {
     value: 0,
     date: new Date(new Date() - 86400).toDateString()
   });
-  console.log(data);
-  client.publish('ServerLocal/CheckID', JSON.stringify(data), { qos: 1 }, function (err) {
+
+  client.publish('ServerLocal/CheckID', JSON.stringify(data), { qos: 2 }, function (err) {
     if (err) {
       console.log('Send add device message through MQTT failed');
       res.sendStatus(400);
@@ -284,7 +300,7 @@ app.get('/delete/device/:id', ensureLoggedIn(), function (req, res) {
     Content: {
       ID: req.params.id
     }
-  }), { qos: 1 }, (err) => {
+  }), { qos: 2 }, (err) => {
     if (err) {
       console.log('Send delete device message through MQTT failed');
       res.sendStatus(400);
@@ -304,7 +320,7 @@ app.get('/delete/room/:id', ensureLoggedIn(), function (req, res) {
     Content: {
       ID: req.params.id
     }
-  }), { qos: 1 }, (err) => {
+  }), { qos: 2 }, (err) => {
     if (err) {
       console.log('Send delete room message through MQTT failed');
       res.sendStatus(400);
@@ -324,11 +340,11 @@ app.get('/delete/room/:id', ensureLoggedIn(), function (req, res) {
 io.on('connection', function (socket) {
   console.log('Someone has connected!');
   socket.on('switch', function (body) {
-    client.publish('ServerLocal/Control', JSON.stringify(body), { qos: 1 });
+    client.publish('ServerLocal/Control', JSON.stringify(body), { qos: 2 });
     console.log(body);
   });
   socket.on('timer', function (body) {
-    client.publish('ServerLocal/Timer', JSON.stringify(body), { qos: 1 });
+    client.publish('ServerLocal/Timer', JSON.stringify(body), { qos: 2 });
     console.log(body);
   });
   socket.on('subscribe', (data) => {
@@ -337,6 +353,7 @@ io.on('connection', function (socket) {
       socket.join('Server/Current' + e);
       socket.join('Server/Power' + e);
       socket.join('Server/Control' + e);
+      console.log('Join ' + e);
     });
   });
 });
@@ -379,8 +396,9 @@ client.on('message', (topic, message) => {
     });
   }
 
-  else if(topic == 'Server/CheckID') {console.log(message)
-    if(message != 'ID not matched') {
+  else if(topic == 'Server/CheckID') {
+    if (json.ok) {
+      
       let query1 = 'insert into device(id, name, status, room_id, timer_status) values($1, $2, $3, $4, $5)';
       let query2 = 'insert into power(id, value, date) values($1, $2, $3)';
       let values1 = [json.ID, json.name, json.status, json.room_id, json.timer_status];
@@ -402,18 +420,18 @@ client.on('message', (topic, message) => {
               console.log('Successfully added device!');
             }
           });
-        }
+        } 
       });
     }
     else {
-      console.log('ID not match!');
+      console.log('ID not matched');
     }
   }
 
-  else if(topic == 'Server/Control') {
+  else if (topic == 'Server/Control') {
     let query = 'UPDATE device SET status = $2 WHERE id = $1';
     let values = [json.ID, json.Status];
-
+    console.log('Emit: ' + json.ID + ' / ' + json.Status);
     io.sockets.in(topic + json.ID).emit('switch', json);
 
     pool.query(query, values, (err, _res) => {
@@ -430,7 +448,7 @@ client.on('message', (topic, message) => {
     let query1 = 'DELETE FROM power WHERE id = $1';
     let query2 = 'DELETE FROM device WHERE id = $1';
     let values = [json.ID];
-    console.log(json.ID);
+
     pool.query(query1, values, (err, _res) => {
       if (err) {
         console.log(err.stack);

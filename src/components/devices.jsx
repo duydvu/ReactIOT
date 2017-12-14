@@ -19,9 +19,10 @@ export default class Devices extends React.Component {
         this.fetchData();
         document.title = "Thiết bị";
         socket.on('switch', (data) => {
-            let updateTarget = this.devices.filter(t => t.id == data.ID);
-            console.log('Update device "' + updateTarget.name + '" to status' + (data.Status ? 'ON' : 'OFF'));
-            updateTarget.status = data.Status;
+            for(var i = 0; i < this.devices.length; i++) {
+                if(this.devices[i].id == data.ID)
+                    this.devices[i].status = parseInt(data.Status);
+            }
             this.forceUpdate();
         })
     }
@@ -227,6 +228,11 @@ class Toggle extends React.Component {
         this.setState(prev => ({ on: !prev.on }), () => {
             this.props.switch(this.state.on);
         });
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps != this.state.props)
+            this.setState({ on: nextProps.on });
     }
 
     render() {
