@@ -22,13 +22,6 @@ export default class Devices extends React.Component {
     componentDidMount() {
         this.fetchData();
         document.title = "Thiết bị";
-        socket.on('switch', (data) => {
-            for(var i = 0; i < this.devices.length; i++) {
-                if(this.devices[i].id == data.ID)
-                    this.devices[i].status = parseInt(data.Status);
-            }
-            this.forceUpdate();
-        })
     }
 
     fetchData() {
@@ -78,7 +71,10 @@ export default class Devices extends React.Component {
 class Device_item extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { current: new Array(50).fill(0) }
+        this.state = { 
+            current: new Array(50).fill(0),
+            status: this.props.status
+        }
         this.time = moment().hour(this.props.time.slice(0, 2)).minute(this.props.time.slice(3, 5)).second(this.props.time.slice(-2));
         this.switch1 = this.switch1.bind(this);
         this.switch2 = this.switch2.bind(this);
@@ -87,6 +83,7 @@ class Device_item extends React.Component {
     }
 
     switch1(status) {
+        this.setState({ status });
         socket.emit('switch', {
             ID: parseInt(this.props._id),
             Status: status ? '1':'0'
@@ -94,16 +91,28 @@ class Device_item extends React.Component {
     }
 
     switch2(status) {
-        console.log(this.time.format(format))
+        var time = this.time.format(format);
+        if(time.slice(-2) == 'am') {
+            if(time.slice(0, 2) == '12') {
+                time = '00' + time.slice(2);
+            }
+        }
+        else {
+            if(time.slice(0, 2) != '12') {
+                time = (parseInt(time.slice(0, 2)) + 12) + time.slice(2);
+            }
+        }
+        time = time.slice(0, 5) + ':00';
         socket.emit('timer', {
             id: this.props._id,
-            time: this.time.format(format),
+            time: time,
             status
         });
     }
 
     componentDidMount() {
         let self = this;
+
         socket.on('current', (data) => {
             this.setState(prev => {
                 if (data.ID == this.props._id)
@@ -112,6 +121,12 @@ class Device_item extends React.Component {
                     return
             });
         })
+        socket.on('switch', (data) => {
+            if (self.props._id == data.ID) {
+                self.setState({ status: parseInt(data.Status) });
+            }
+        })
+
         var ctx = this.canvas2.getContext('2d');
         var labels = this.props.power.date.map((e, i) => {
             return this.props.power.date.length - i + ' days ago';
@@ -208,7 +223,7 @@ class Device_item extends React.Component {
                     <div className="row"><span>Tên : </span>{this.props.name}</div>
                     <div className="row">
                         <span>Trạng thái : </span>
-                        <Toggle on={this.props.status} switch={this.switch1} />
+                        <Toggle on={this.state.status} switch={this.switch1} />
                     </div>
                     <div className="row">
                         <span>Hẹn giờ : </span>
@@ -253,7 +268,7 @@ class Toggle extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps != this.state.props)
+        if(nextProps.on != this.props.on)
             this.setState({ on: nextProps.on });
     }
 

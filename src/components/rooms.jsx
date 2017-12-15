@@ -70,10 +70,6 @@ export default class Rooms extends React.Component {
                     <table>
                         <tbody>
                             <tr>
-                                <td>ID:</td>
-                                <td>{e.id}</td>
-                            </tr>
-                            <tr>
                                 <td>Phòng:</td>
                                 <td>{e.room_name}</td>
                             </tr>
